@@ -12,20 +12,28 @@ module.exports = class Server {
     onConnected(socket) {
         console.log("client connected")
         
+        socket.send(JSON.stringify({type: "position", message: JSON.stringify({x: 112, y: 122, tankId: 1})}))
         // TODO send position of other tanks to that user
-        // TODO send position of this tank to this user 
+        // TODO send position of this tank to other users
     }
 
     handleMessage(socket, data){
         let parsed = JSON.parse(data);
 
-        if(parsed.method == 'position')
+        if(parsed.types == 'position')
         {
             console.log(JSON.parse(parsed.message))
         }
-        
-        // TODO for each user send position
-        socket.send(JSON.stringify({method: "position", message: JSON.stringify({x: 112, y: 122, tankId: 1})}))
+
+        if(parsed.types == 'fire')
+        {
+            console.log(JSON.parse(parsed.message))
+        }
+
+        if(parsed.types == 'movement')
+        {
+            console.log(JSON.parse(parsed.message))
+        }
         
     }
 

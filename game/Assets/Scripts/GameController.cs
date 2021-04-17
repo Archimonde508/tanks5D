@@ -101,53 +101,54 @@ public class GameController : MonoBehaviour
             TankController cur = tc[i];
             if (tanks[i] != null && !cur.isDead)
             {
+                GameMessaging gm = communication.GameMsg;
                 if (!cur.movingForward && Input.GetKey(cur.forwardKey))
                 {
-                    communication.SendRequest("forward");
+                    gm.EchoMovementMessage(MovementMessageModel.Action.Forward, true);
                     cur.movingForward = true;
                 }
                 if (cur.movingForward && Input.GetKeyUp(cur.forwardKey))
                 {
-                    communication.SendRequest("stop forward");
+                    gm.EchoMovementMessage(MovementMessageModel.Action.Forward, false);
                     cur.movingForward = false;
                 }
 
                 if (!cur.movingBackward && Input.GetKey(cur.backwardKey))
                 {
-                    communication.SendRequest("backward");
+                    gm.EchoMovementMessage(MovementMessageModel.Action.Backward, true);
                     cur.movingBackward = true;
                 }
                 if (cur.movingBackward && Input.GetKeyUp(cur.backwardKey))
                 {
-                    communication.SendRequest("stop backward");
+                    gm.EchoMovementMessage(MovementMessageModel.Action.Backward, false);
                     cur.movingBackward = false;
                 }
 
                 if (!cur.turningRight && Input.GetKey(cur.rotateRightKey))
                 {
-                    communication.SendRequest("right");
+                    gm.EchoMovementMessage(MovementMessageModel.Action.Rot_right, true);
                     cur.turningRight = true;
                 }
                 if (cur.turningRight && Input.GetKeyUp(cur.rotateRightKey))
                 {
-                    communication.SendRequest("stop right");
+                    gm.EchoMovementMessage(MovementMessageModel.Action.Rot_right, false);
                     cur.turningRight = false;
                 }
 
                 if (!cur.turningLeft && Input.GetKey(cur.rotateLeftKey))
                 {
-                    communication.SendRequest("left");
+                    gm.EchoMovementMessage(MovementMessageModel.Action.Rot_left, true);
                     cur.turningLeft = true;
                 }
                 if (cur.turningLeft && Input.GetKeyUp(cur.rotateLeftKey))
                 {
-                    communication.SendRequest("stop left");
+                    gm.EchoMovementMessage(MovementMessageModel.Action.Rot_left, true);
                     cur.turningLeft = false;
                 }
 
                 if (Input.GetKeyDown(cur.fireKey))
                 {
-                    communication.SendRequest("fire");
+                    gm.EchoFireMessage();
                     cur.barrelScript.Fire();
                 }
             }

@@ -12,7 +12,7 @@ public class ServerCommunication : MonoBehaviour
     // Server port
     [SerializeField]
     private int port = 3000;
-
+    
     // Flag to use localhost
     [SerializeField]
     private bool useLocalhost = true;
@@ -68,17 +68,19 @@ public class ServerCommunication : MonoBehaviour
         var message = JsonUtility.FromJson<MessageModel>(msg);
 
         // Picking correct method for message handling
-        switch (message.method)
+        switch (message.type)
         {
             case GameMessaging.Init:
                 GameMsg.OnConnectedToServer();
                 break;
             case GameMessaging.Position:
-                Debug.Log(message.message);
                 GameMsg.OnPositionMessage(JsonUtility.FromJson<PositionMessageModel>(message.message));
                 break;
+            case GameMessaging.Movement:
+                GameMsg.OnMovementMessage(JsonUtility.FromJson<MovementMessageModel>(message.message));
+                break;
             default:
-                Debug.LogError("Unknown type of method: " + message.method);
+                Debug.LogError("Unknown type of method: " + message.type);
                 break;
         }
     }

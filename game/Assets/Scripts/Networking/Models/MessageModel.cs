@@ -4,6 +4,6 @@
 [System.Serializable]
 public class MessageModel
 {
-    public string method;
+    public string type;
     public string message;
 }

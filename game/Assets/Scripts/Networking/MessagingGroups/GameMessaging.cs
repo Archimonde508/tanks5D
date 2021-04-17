@@ -8,37 +8,63 @@ public class GameMessaging : BaseMessaging
 {
     public GameMessaging(ServerCommunication client) : base(client) { }
 
-    // Register messages
     public const string Init = "init";
     /*public UnityAction OnConnectedToServer;*/
 
     public void OnConnectedToServer()
     {
-        EchoMessage(new PositionMessageModel()
+        var message = new MessageModel
         {
-            x = 0,
-            y = 0,
-            tankId = 0
-        });
+            type = "position",
+            message = JsonUtility.ToJson(new PositionMessageModel()
+            {
+                x = 0,
+                y = 0,
+                tankId = 0
+            })
+        };
+        client.SendRequest(JsonUtility.ToJson(message));
     }
 
-    // Echo messages
     public const string Position = "position";
     /*public UnityAction<PositionMessagModel> OnEchoMessage;*/
 
     public void OnPositionMessage(PositionMessageModel message)
     {
-        Debug.Log("Received position from server! x:" + message.x + " y:" + message.y + " tankId:" + message.tankId);
+        Debug.Log("Spawn new opponent");
     }
 
-    // Sends echo message to the server.
-    public void EchoMessage(PositionMessageModel request)
+    public const string Movement = "movement";
+
+    public void OnMovementMessage(MovementMessageModel message)
+    {
+        Debug.Log("Opponent moved");
+    }
+    
+    public void EchoMovementMessage(MovementMessageModel.Action action, bool pressed)
     {
         var message = new MessageModel
         {
-            method = "position",
-            message = JsonUtility.ToJson(request)
+            type = "movement",
+            message = JsonUtility.ToJson(new MovementMessageModel()
+            {
+                action = action,
+                pressed = pressed
+            })
         };
         client.SendRequest(JsonUtility.ToJson(message));
     }
+
+    public void EchoFireMessage()
+    {
+        var message = new MessageModel
+        {
+            type = "fire",
+            message = JsonUtility.ToJson(new FireMessageModel()
+            {
+            })
+        };
+        client.SendRequest(JsonUtility.ToJson(message));
+    }
+
 }

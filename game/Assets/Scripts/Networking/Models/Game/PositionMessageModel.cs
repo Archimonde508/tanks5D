@@ -1,6 +1,4 @@
-﻿/// <summary>
-/// Echo message model.
-/// </summary>
+﻿
 [System.Serializable]
 public class PositionMessageModel
 {
