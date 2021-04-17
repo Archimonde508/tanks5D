@@ -11,5 +11,11 @@ module.exports = class Server {
     //Handle a new connection to the server
     onConnected(socket) {
         console.log("client connected")
+
+    }
+
+    //Handle a new connection to the server
+    onDisconnected(socket) {
+        console.log("client disconnected")
     }
 }
