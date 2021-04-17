@@ -11,7 +11,7 @@ wss.on('connection', function connection(ws) {
     // console.log(connection)
     ws.on('message', (data) => {
         console.log('data received \n %o',data)
-        ws.send(data);
+        // ws.send(data);
     })
 
     ws.on('listening',()=>{
