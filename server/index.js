@@ -8,8 +8,10 @@ const wss = new WebSocket.Server({ port: 3000 },()=>{
 })
 wss.on('connection', function connection(ws) {
     let connection = server.onConnected(ws);
+    ws.send(JSON.stringify({method: "init", message: "{}"}))
     // console.log(connection)
     ws.on('message', (data) => {
+        server.handleMessage(ws, data);
         console.log('data received \n %o',data)
         // ws.send(data);
     })

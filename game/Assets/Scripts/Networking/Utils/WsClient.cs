@@ -110,13 +110,16 @@ public class WsClient
         ArraySegment<byte> msg;
         while (true)
         {
-            Debug.Log("Waiting for message in queue");
-            while (!sendQueue.IsCompleted)
+            while(IsConnectionOpen())
             {
-                msg = sendQueue.Take();
-                Debug.Log("Dequeued this message to send: " + msg);
-                await ws.SendAsync(msg, WebSocketMessageType.Text, true /* is last part of message */, CancellationToken.None);
+                while (!sendQueue.IsCompleted)
+                {
+                    msg = sendQueue.Take();
+                    Debug.Log("Dequeued this message to send: " + msg);
+                    await ws.SendAsync(msg, WebSocketMessageType.Text, true /* is last part of message */, CancellationToken.None);
+                }
             }
+            
         }
     }
 
