@@ -69,7 +69,6 @@ public class GameController : MonoBehaviour
                 }
                 if (Input.GetKey(tanks[i].forwardKey))
                 {
-                    communication.SendRequest("forward");
                     tanks[i].movingDirection = new Vector3(0, tanks[i].movingDirection.y, 1);
                     tanks[i].movingDirection *= tanks[i].forwardSpeed;
                 }

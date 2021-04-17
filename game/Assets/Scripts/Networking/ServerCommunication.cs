@@ -25,8 +25,8 @@ public class ServerCommunication : MonoBehaviour
     // WebSocket Client
     private WsClient client;
 
-    // Class with messages for "lobby"
-    public LobbyMessaging Lobby { private set; get; }
+    // Class with messages for "game"
+    public GameMessaging GameMsg { private set; get; }
 
     /// <summary>
     /// Unity method called on initialization
@@ -37,7 +37,7 @@ public class ServerCommunication : MonoBehaviour
         client = new WsClient(server);
 
         // Messaging
-        Lobby = new LobbyMessaging(this);
+        GameMsg = new GameMessaging(this);
     }
 
     /// <summary>
@@ -70,11 +70,12 @@ public class ServerCommunication : MonoBehaviour
         // Picking correct method for message handling
         switch (message.method)
         {
-            case LobbyMessaging.Register:
-                Lobby.OnConnectedToServer?.Invoke();
+            case GameMessaging.Init:
+                GameMsg.OnConnectedToServer();
                 break;
-            case LobbyMessaging.Echo:
-                Lobby.OnEchoMessage?.Invoke(JsonUtility.FromJson<EchoMessageModel>(message.message));
+            case GameMessaging.Position:
+                Debug.Log(message.message);
+                GameMsg.OnPositionMessage(JsonUtility.FromJson<PositionMessageModel>(message.message));
                 break;
             default:
                 Debug.LogError("Unknown type of method: " + message.method);
