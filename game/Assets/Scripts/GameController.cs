@@ -14,6 +14,7 @@ public class GameController : MonoBehaviour
 
     private void Awake()
     {
+        Connection.func();
         // z -34 do 18
         spawnPositionsZ.Add(-34f);
         spawnPositionsZ.Add(18f);
