@@ -15,14 +15,14 @@ public class HealthStatusUI : MonoBehaviour
 
     private void Awake()
     {
-        tank1 = GameObject.Find("Tank1").GetComponent<TankController>();
-        tank2 = GameObject.Find("Tank2").GetComponent<TankController>();
-        tank3 = GameObject.Find("Tank3").GetComponent<TankController>();
+        
     }
 
     void Start()
     {
-        
+        tank1 = GameObject.Find("Tank1").GetComponent<TankController>();
+        tank2 = GameObject.Find("Tank2").GetComponent<TankController>();
+        tank3 = GameObject.Find("Tank3").GetComponent<TankController>();
     }
 
     // Update is called once per frame

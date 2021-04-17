@@ -1,23 +1,82 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public class GameController : MonoBehaviour
 {
     const int maxTanks = 3;
-    public TankController[] tanks = new TankController[maxTanks];
+    public GameObject[] tanks = new GameObject[maxTanks];
+    public TankController[] tc = new TankController[maxTanks];
     float gravity = -1.0f;
     bool isRoundFinished = false;
     List<float> spawnPositionsX = new List<float>();
     List<float> spawnPositionsZ = new List<float>();
     int spawnPositionsNo = 5;
+    public GameObject projectilePrefab;
+    int currentPlayers = 0;
 
     [SerializeField]
     private ServerCommunication communication;
 
+    void addPlayer(int id)
+    {
+        string idStr = (id + 1).ToString();
+        Vector3 vec3 = new Vector3(2.0f, 0.5f, 3.0f);
+        Vector3 rotVec = new Vector3(0.0f, 0.0f, 0.0f);
+        Quaternion rotation = Quaternion.Euler(rotVec);
+        tanks[id] = Instantiate(projectilePrefab, vec3, rotation);
+        tanks[id].name = "Tank" + idStr;
+        tc[id] = tanks[id].GetComponent<TankController>();
+
+        if(id == 0)
+        {
+            tc[id].forwardKey = KeyCode.W;
+            tc[id].backwardKey = KeyCode.S;
+            tc[id].rotateLeftKey = KeyCode.A;
+            tc[id].rotateRightKey = KeyCode.D;
+            tc[id].fireKey = KeyCode.Q;
+        }
+        if(id == 1)
+        {
+            tc[id].forwardKey = KeyCode.UpArrow;
+            tc[id].backwardKey = KeyCode.DownArrow;
+            tc[id].rotateLeftKey = KeyCode.LeftArrow;
+            tc[id].rotateRightKey = KeyCode.RightArrow;
+            tc[id].fireKey = KeyCode.RightBracket;
+        }
+        if(id == 2)
+        {
+            tc[id].forwardKey = KeyCode.U;
+            tc[id].backwardKey = KeyCode.J;
+            tc[id].rotateLeftKey = KeyCode.H;
+            tc[id].rotateRightKey = KeyCode.K;
+            tc[id].fireKey = KeyCode.T;
+        }
+
+
+        var cubeRenderer = tanks[id].GetComponent<Renderer>();
+        if (id == 0)
+        {
+            cubeRenderer.material.SetColor("_Color", Color.red);
+        }
+        if(id == 1)
+        {
+            cubeRenderer.material.SetColor("_Color", Color.green);
+        }
+        if (id == 2)
+        {
+            cubeRenderer.material.SetColor("_Color", Color.blue);
+        }
+        currentPlayers++;
+    }
+
     private void Awake()
     {
         communication.ConnectToServer();
+        addPlayer(currentPlayers);
+        addPlayer(currentPlayers);
+        addPlayer(currentPlayers);
 
         // z -34 do 18
         spawnPositionsZ.Add(-34f);
@@ -32,77 +91,123 @@ public class GameController : MonoBehaviour
         spawnPositionsX.Add(-3);
         spawnPositionsX.Add(-8);
 
-        tanks[0] = GameObject.Find("Tank1").GetComponent<TankController>();
-        tanks[0].forwardKey = KeyCode.W;
-        tanks[0].backwardKey = KeyCode.S;
-        tanks[0].rotateLeftKey = KeyCode.A;
-        tanks[0].rotateRightKey = KeyCode.D;
-        tanks[0].fireKey = KeyCode.Q;
-
-        tanks[1] = GameObject.Find("Tank2").GetComponent<TankController>();
-        tanks[1].forwardKey = KeyCode.UpArrow;
-        tanks[1].backwardKey = KeyCode.DownArrow;
-        tanks[1].rotateLeftKey = KeyCode.LeftArrow;
-        tanks[1].rotateRightKey = KeyCode.RightArrow;
-        tanks[1].fireKey = KeyCode.RightBracket;
-
-        tanks[2] = GameObject.Find("Tank3").GetComponent<TankController>();
-        tanks[2].forwardKey = KeyCode.U;
-        tanks[2].backwardKey = KeyCode.J;
-        tanks[2].rotateLeftKey = KeyCode.H;
-        tanks[2].rotateRightKey = KeyCode.K;
-        tanks[2].fireKey = KeyCode.T;
+        nextRound();
     }
 
-    private void Update()
+    public void ManageKeyboard()
     {
-        for (int i = 0; i < maxTanks; i++)
+        for (int i = 0; i < currentPlayers; i++)
         {
-            if (tanks[i] != null && !tanks[i].isDead)
+            TankController cur = tc[i];
+            if (tanks[i] != null && !cur.isDead)
             {
-                if (tanks[i].controller.isGrounded)
+                if (!cur.movingForward && Input.GetKey(cur.forwardKey))
                 {
-                    tanks[i].movingDirection.y = gravity;
+                    communication.SendRequest("forward");
+                    cur.movingForward = true;
+                }
+                if (cur.movingForward && Input.GetKeyUp(cur.forwardKey))
+                {
+                    communication.SendRequest("stop forward");
+                    cur.movingForward = false;
+                }
+
+                if (!cur.movingBackward && Input.GetKey(cur.backwardKey))
+                {
+                    communication.SendRequest("backward");
+                    cur.movingBackward = true;
+                }
+                if (cur.movingBackward && Input.GetKeyUp(cur.backwardKey))
+                {
+                    communication.SendRequest("stop backward");
+                    cur.movingBackward = false;
+                }
+
+                if (!cur.turningRight && Input.GetKey(cur.rotateRightKey))
+                {
+                    communication.SendRequest("right");
+                    cur.turningRight = true;
+                }
+                if (cur.turningRight && Input.GetKeyUp(cur.rotateRightKey))
+                {
+                    communication.SendRequest("stop right");
+                    cur.turningRight = false;
+                }
+
+                if (!cur.turningLeft && Input.GetKey(cur.rotateLeftKey))
+                {
+                    communication.SendRequest("left");
+                    cur.turningLeft = true;
+                }
+                if (cur.turningLeft && Input.GetKeyUp(cur.rotateLeftKey))
+                {
+                    communication.SendRequest("stop left");
+                    cur.turningLeft = false;
+                }
+
+                if (Input.GetKeyDown(cur.fireKey))
+                {
+                    communication.SendRequest("fire");
+                    cur.barrelScript.Fire();
+                }
+            }
+        }
+    }
+
+    void MoveTank()
+    {
+        for (int i = 0; i < currentPlayers; i++)
+        {
+            TankController cur = tc[i];
+            if (tanks[i] != null && !cur.isDead)
+            {
+                if (cur.controller.isGrounded)
+                {
+                    cur.movingDirection.y = gravity;
                     // Jesli postac nie spada (isGrounded) to moveDirection.y nie powinno rosnac. 
                     // Dlatego "zerujemy" te wartosc. (Inaczej bedzie ciagle malec na skutek -= gravity)
                     // Nie piszemy moveDirection.y = 0, lecz moveDirection.y = -1, bo w innym wypadku controller.isGrounded nie dziala poprawnie. 
                 }
-                if (Input.GetKey(tanks[i].forwardKey))
+                if (cur.movingForward)
                 {
-                    communication.SendRequest("forward");
-                    tanks[i].movingDirection = new Vector3(0, tanks[i].movingDirection.y, 1);
-                    tanks[i].movingDirection *= tanks[i].forwardSpeed;
+                    cur.movingDirection = new Vector3(0, cur.movingDirection.y, 1);
+                    cur.movingDirection *= cur.forwardSpeed;
                 }
-                else if (Input.GetKey(tanks[i].backwardKey))
+                if (cur.movingBackward)
                 {
-                    tanks[i].movingDirection = new Vector3(0, tanks[i].movingDirection.y, -1);
-                    tanks[i].movingDirection *= tanks[i].backwardSpeed;
+                    cur.movingDirection = new Vector3(0, cur.movingDirection.y, -1);
+                    cur.movingDirection *= cur.backwardSpeed;
                 }
-                if (Input.GetKeyUp(tanks[i].backwardKey) || Input.GetKeyUp(tanks[i].forwardKey))
+
+                if (Input.GetKeyUp(cur.backwardKey) || Input.GetKeyUp(cur.forwardKey))
                 {
-                    tanks[i].movingDirection = new Vector3(0, tanks[i].movingDirection.y, 0);
-                }
-                if (Input.GetKey(tanks[i].rotateRightKey))
-                {
-                    tanks[i].rotation += tanks[i].rotationSpeed * Time.deltaTime;
-                }
-                else if (Input.GetKey(tanks[i].rotateLeftKey))
-                {
-                    tanks[i].rotation -= tanks[i].rotationSpeed * Time.deltaTime;
-                }
-                if (Input.GetKeyDown(tanks[i].fireKey))
-                {
-                    tanks[i].barrelScript.Fire();
+                    cur.movingDirection = new Vector3(0, cur.movingDirection.y, 0);
                 }
 
 
-                tanks[i].movingDirection = tanks[i].transform.TransformDirection(tanks[i].movingDirection);
-                tanks[i].controller.Move(tanks[i].movingDirection * Time.deltaTime);
-                tanks[i].transform.eulerAngles = new Vector3(0, tanks[i].rotation, 0); // y, bo obrot do okola osi pionowej
-                tanks[i].rotation %= 360f;
+                if (cur.turningRight)
+                {
+                    cur.rotation += cur.rotationSpeed * Time.deltaTime;
+                }
+
+                if (cur.turningLeft)
+                {
+                    cur.rotation -= cur.rotationSpeed * Time.deltaTime;
+                }
+
+                cur.movingDirection = tanks[i].transform.TransformDirection(cur.movingDirection);
+                cur.controller.Move(cur.movingDirection * Time.deltaTime);
+                cur.transform.eulerAngles = new Vector3(0, cur.rotation, 0); // y, bo obrot do okola osi pionowej
+                tc[i].rotation %= 360f;
             }
         }
+    }
 
+    private void Update()
+    {
+        ManageKeyboard();
+        MoveTank();
+        
         if (!isRoundFinished)
         {
             if (deadTanks() == maxTanks)
@@ -123,7 +228,7 @@ public class GameController : MonoBehaviour
     {
         int counter = 0;
         for (int i = 0; i < maxTanks; i++)
-            if (tanks[i].isDead)
+            if (tc[i].isDead)
             {
                 counter++;
             }
@@ -134,13 +239,49 @@ public class GameController : MonoBehaviour
     {
         System.Random r = new System.Random();
 
-        foreach (TankController tank in tanks)
+        List<float> alreadyUsedX = new List<float>();
+        List<float> alreadyUsedZ = new List<float>();
+        int licz = 0;
+        foreach (TankController tank in tc)
         {
-            int rInt = r.Next(0, spawnPositionsNo);
-            float x = spawnPositionsX[rInt];
-            rInt = r.Next(0, spawnPositionsNo);
-            float z = spawnPositionsZ[rInt];
-            int rot = r.Next(0, 360);
+            bool correctSpawn = false;
+
+            int rot = r.Next(0, 360); // TODO
+            float x = 0;
+            float z = 0;
+
+            while (!correctSpawn)
+            {
+                if (licz++ > 10000)
+                {
+                    Debug.Log("enough");
+                    return; // debug only
+                }
+                int rInt = r.Next(0, spawnPositionsNo);
+                x = spawnPositionsX[rInt];
+                rInt = r.Next(0, spawnPositionsNo);
+                z = spawnPositionsZ[rInt];
+               
+                if (!alreadyUsedX.Any()) {
+                    alreadyUsedX.Add(x);
+                    alreadyUsedZ.Add(z);
+                    correctSpawn = true;
+                }
+                else
+                {
+                    if (alreadyUsedX.Contains(x) || alreadyUsedZ.Contains(z))
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        alreadyUsedX.Add(x);
+                        alreadyUsedZ.Add(z);
+                        correctSpawn = true;
+                    }
+                }                
+            }
+    
             tank.spawnTank();
             tank.setPosition(x, z, rot);
         }
@@ -163,9 +304,9 @@ public class GameController : MonoBehaviour
         {
             for (int i = 0; i < maxTanks; i++)
             {
-                if (!tanks[i].isDead)
+                if (!tc[i].isDead)
                 {
-                    tanks[i].points++;
+                    tc[i].points++;
                 }
             }
             StartCoroutine(finishRound());

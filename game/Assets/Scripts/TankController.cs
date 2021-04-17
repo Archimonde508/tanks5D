@@ -23,6 +23,11 @@ public class TankController : MonoBehaviour
     public KeyCode fireKey;
     public bool zmienna;
     public GameObject explosionEffect;
+
+    public bool movingForward = false;
+    public bool movingBackward = false;
+    public bool turningLeft = false;
+    public bool turningRight = false;
    
 
     private void Update()
