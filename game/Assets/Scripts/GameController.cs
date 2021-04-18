@@ -15,6 +15,7 @@ public class GameController : MonoBehaviour
     int spawnPositionsNo = 5;
     public GameObject projectilePrefab;
     int currentPlayers = 0;
+    public int your_id;
 
     [SerializeField]
     private ServerCommunication communication;
@@ -29,13 +30,14 @@ public class GameController : MonoBehaviour
         tanks[id].name = "Tank" + idStr;
         tc[id] = tanks[id].GetComponent<TankController>();
 
-
-        tc[id].forwardKey = KeyCode.W;
-        tc[id].backwardKey = KeyCode.S;
-        tc[id].rotateLeftKey = KeyCode.A;
-        tc[id].rotateRightKey = KeyCode.D;
-        tc[id].fireKey = KeyCode.Q;
-
+        if(id == your_id)
+        {
+            tc[id].forwardKey = KeyCode.W;
+            tc[id].backwardKey = KeyCode.S;
+            tc[id].rotateLeftKey = KeyCode.A;
+            tc[id].rotateRightKey = KeyCode.D;
+            tc[id].fireKey = KeyCode.Q;
+        }
 
 
         var cubeRenderer = tanks[id].GetComponent<Renderer>();
@@ -53,9 +55,6 @@ public class GameController : MonoBehaviour
         }
         currentPlayers++;
         tc[id].setPosition(x, z, 0);
-
-        // czolg o id 1 ma przypisane swoje klawisze pod id 1, ale czolg o id 0 nie istnieje
-        // zanim stworzymy czolg o id 1 musimy stworzyc czolg o id 0 na podstawie serwera
     }
 
     private void Awake()
@@ -66,63 +65,69 @@ public class GameController : MonoBehaviour
 
     public void ManageKeyboard()
     {
-        for (int i = 0; i < currentPlayers; i++)
+
+        TankController cur = tc[your_id];
+
+        if (tanks[your_id] != null && !cur.isDead)
         {
-            TankController cur = tc[i];
-            if (tanks[i] != null && !cur.isDead)
+            GameMessaging gm = communication.GameMsg;
+            if (!cur.movingForward && Input.GetKey(cur.forwardKey))
             {
-                GameMessaging gm = communication.GameMsg;
-                if (!cur.movingForward && Input.GetKey(cur.forwardKey))
-                {
-                    gm.EchoMovementMessage(MovementMessageModel.Action.Forward, true);
-                    cur.movingForward = true;
-                }
-                if (cur.movingForward && Input.GetKeyUp(cur.forwardKey))
-                {
-                    gm.EchoMovementMessage(MovementMessageModel.Action.Forward, false);
-                    cur.movingForward = false;
-                }
+                gm.EchoMovementMessage(MovementMessageModel.Action.Forward, true);
+                cur.movingForward = true;
+            }
+            if (cur.movingForward && Input.GetKeyUp(cur.forwardKey))
+            {
+                gm.EchoMovementMessage(MovementMessageModel.Action.Forward, false);
+                cur.movingForward = false;
+            }
 
-                if (!cur.movingBackward && Input.GetKey(cur.backwardKey))
-                {
-                    gm.EchoMovementMessage(MovementMessageModel.Action.Backward, true);
-                    cur.movingBackward = true;
-                }
-                if (cur.movingBackward && Input.GetKeyUp(cur.backwardKey))
-                {
-                    gm.EchoMovementMessage(MovementMessageModel.Action.Backward, false);
-                    cur.movingBackward = false;
-                }
+            if (!cur.movingBackward && Input.GetKey(cur.backwardKey))
+            {
+                gm.EchoMovementMessage(MovementMessageModel.Action.Backward, true);
+                cur.movingBackward = true;
+            }
+            if (cur.movingBackward && Input.GetKeyUp(cur.backwardKey))
+            {
+                gm.EchoMovementMessage(MovementMessageModel.Action.Backward, false);
+                cur.movingBackward = false;
+            }
 
-                if (!cur.turningRight && Input.GetKey(cur.rotateRightKey))
-                {
-                    gm.EchoMovementMessage(MovementMessageModel.Action.Rot_right, true);
-                    cur.turningRight = true;
-                }
-                if (cur.turningRight && Input.GetKeyUp(cur.rotateRightKey))
-                {
-                    gm.EchoMovementMessage(MovementMessageModel.Action.Rot_right, false);
-                    cur.turningRight = false;
-                }
+            if (!cur.turningRight && Input.GetKey(cur.rotateRightKey))
+            {
+                gm.EchoMovementMessage(MovementMessageModel.Action.Rot_right, true);
+                cur.turningRight = true;
+            }
+            if (cur.turningRight && Input.GetKeyUp(cur.rotateRightKey))
+            {
+                gm.EchoMovementMessage(MovementMessageModel.Action.Rot_right, false);
+                cur.turningRight = false;
+            }
 
-                if (!cur.turningLeft && Input.GetKey(cur.rotateLeftKey))
-                {
-                    gm.EchoMovementMessage(MovementMessageModel.Action.Rot_left, true);
-                    cur.turningLeft = true;
-                }
-                if (cur.turningLeft && Input.GetKeyUp(cur.rotateLeftKey))
-                {
-                    gm.EchoMovementMessage(MovementMessageModel.Action.Rot_left, false);
-                    cur.turningLeft = false;
-                }
+            if (!cur.turningLeft && Input.GetKey(cur.rotateLeftKey))
+            {
+                gm.EchoMovementMessage(MovementMessageModel.Action.Rot_left, true);
+                cur.turningLeft = true;
+            }
+            if (cur.turningLeft && Input.GetKeyUp(cur.rotateLeftKey))
+            {
+                gm.EchoMovementMessage(MovementMessageModel.Action.Rot_left, false);
+                cur.turningLeft = false;
+            }
 
-                if (Input.GetKeyDown(cur.fireKey))
-                {
-                    gm.EchoFireMessage();
-                    cur.barrelScript.Fire();
-                }
+            if (Input.GetKeyDown(cur.fireKey))
+            {
+                gm.EchoFireMessage();
+                cur.barrelScript.Fire();
             }
         }
+
+
+        //for (int i = 0; i < currentPlayers; i++)
+        //{
+            
+            
+        //}
     }
 
     void MoveTank()
