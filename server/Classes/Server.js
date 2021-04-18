@@ -13,9 +13,28 @@ module.exports = class Server {
         this.websocketServer = wss;
     }
 
-    connectNewClient(socket, id) {
+
+    generateFreeId()
+    {
+        for(var i=0;i<3;i++)
+        {
+            var free = true
+            this.clients.forEach((client)=>{
+                if(client.id == i)
+                    free = false
+            })
+
+            if(free)
+                return i
+        }
+        return 0
+    }
+
+    connectNewClient(socket) {
         var spawnCords = this.generateSpawn()
-    
+
+        var id = this.generateFreeId()
+
 
         // send tank id to connected user
         socket.send(JSON.stringify({
