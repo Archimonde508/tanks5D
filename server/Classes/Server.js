@@ -1,6 +1,12 @@
 module.exports = class Server {
-    constructor(isLocal = false) {
-        let server = this;    
+    constructor(wss, isLocal = false) {
+        let server = this;
+        this.clients = {}; // {socket: id}
+        this.websocketServer = wss;
+    }
+
+    addNewClient(socket, id) {
+        this.clients[socket] = id
     }
 
     //Interval update every 100 miliseconds
@@ -20,22 +26,34 @@ module.exports = class Server {
         // TODO send position of this tank to other users
     }
 
+    validateMessage(id)
+    {
+        // TODO token validation of message
+        return true;
+    }
+
     handleMessage(socket, data){
         let parsed = JSON.parse(data);
+        console.log('parsed', parsed)
 
-        if(parsed.types == 'position')
+        // tankId = parsed.id
+        if(!this.validateMessage(parsed.id))
+            return;
+
+        if(parsed.type == 'position')
         {
             console.log(JSON.parse(parsed.message))
         }
 
-        if(parsed.types == 'fire')
+        if(parsed.type == 'fire')
         {
             console.log(JSON.parse(parsed.message))
         }
 
-        if(parsed.types == 'movement')
+        if(parsed.type == 'movement')
         {
             console.log(JSON.parse(parsed.message))
+            this.websocketServer.broadcast(parsed, socket);
         }
         
     }
