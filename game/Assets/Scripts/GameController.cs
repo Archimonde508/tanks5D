@@ -19,7 +19,7 @@ public class GameController : MonoBehaviour
     [SerializeField]
     private ServerCommunication communication;
 
-    void addPlayer(int id)
+    public void addPlayer(int id, int x, int z)
     {
         string idStr = (id + 1).ToString();
         Vector3 vec3 = new Vector3(2.0f, 0.5f, 3.0f);
@@ -29,30 +29,13 @@ public class GameController : MonoBehaviour
         tanks[id].name = "Tank" + idStr;
         tc[id] = tanks[id].GetComponent<TankController>();
 
-        if(id == 0)
-        {
-            tc[id].forwardKey = KeyCode.W;
-            tc[id].backwardKey = KeyCode.S;
-            tc[id].rotateLeftKey = KeyCode.A;
-            tc[id].rotateRightKey = KeyCode.D;
-            tc[id].fireKey = KeyCode.Q;
-        }
-        if(id == 1)
-        {
-            tc[id].forwardKey = KeyCode.UpArrow;
-            tc[id].backwardKey = KeyCode.DownArrow;
-            tc[id].rotateLeftKey = KeyCode.LeftArrow;
-            tc[id].rotateRightKey = KeyCode.RightArrow;
-            tc[id].fireKey = KeyCode.RightBracket;
-        }
-        if(id == 2)
-        {
-            tc[id].forwardKey = KeyCode.U;
-            tc[id].backwardKey = KeyCode.J;
-            tc[id].rotateLeftKey = KeyCode.H;
-            tc[id].rotateRightKey = KeyCode.K;
-            tc[id].fireKey = KeyCode.T;
-        }
+
+        tc[id].forwardKey = KeyCode.W;
+        tc[id].backwardKey = KeyCode.S;
+        tc[id].rotateLeftKey = KeyCode.A;
+        tc[id].rotateRightKey = KeyCode.D;
+        tc[id].fireKey = KeyCode.Q;
+
 
 
         var cubeRenderer = tanks[id].GetComponent<Renderer>();
@@ -69,29 +52,16 @@ public class GameController : MonoBehaviour
             cubeRenderer.material.SetColor("_Color", Color.blue);
         }
         currentPlayers++;
+        tc[id].setPosition(x, z, 0);
+
+        // czolg o id 1 ma przypisane swoje klawisze pod id 1, ale czolg o id 0 nie istnieje
+        // zanim stworzymy czolg o id 1 musimy stworzyc czolg o id 0 na podstawie serwera
     }
 
     private void Awake()
-    {
+    {     
         communication.ConnectToServer();
-        addPlayer(currentPlayers);
-        addPlayer(currentPlayers);
-        addPlayer(currentPlayers);
-
-        // z -34 do 18
-        spawnPositionsZ.Add(-34f);
-        spawnPositionsZ.Add(18f);
-        spawnPositionsZ.Add(9f);
-        spawnPositionsZ.Add(2f);
-        spawnPositionsZ.Add(-15f);
-
-        spawnPositionsX.Add(13);
-        spawnPositionsX.Add(6);
-        spawnPositionsX.Add(3);
-        spawnPositionsX.Add(-3);
-        spawnPositionsX.Add(-8);
-
-        nextRound();
+        //nextRound();
     }
 
     public void ManageKeyboard()
@@ -142,7 +112,7 @@ public class GameController : MonoBehaviour
                 }
                 if (cur.turningLeft && Input.GetKeyUp(cur.rotateLeftKey))
                 {
-                    gm.EchoMovementMessage(MovementMessageModel.Action.Rot_left, true);
+                    gm.EchoMovementMessage(MovementMessageModel.Action.Rot_left, false);
                     cur.turningLeft = false;
                 }
 
@@ -209,26 +179,26 @@ public class GameController : MonoBehaviour
         ManageKeyboard();
         MoveTank();
         
-        if (!isRoundFinished)
-        {
-            if (deadTanks() == maxTanks)
-            {
-                isRoundFinished = true;
-                StartCoroutine(finishRound());
-                nextRound();
-            }
-            if (deadTanks() == maxTanks - 1)
-            {
-                isRoundFinished = true;
-                StartCoroutine(waiter());
-            }
-        }
+        //if (!isRoundFinished)
+        //{
+        //    if (deadTanks() == maxTanks)
+        //    {
+        //        isRoundFinished = true;
+        //        StartCoroutine(finishRound());
+        //        nextRound();
+        //    }
+        //    if (deadTanks() == maxTanks - 1)
+        //    {
+        //        isRoundFinished = true;
+        //        StartCoroutine(waiter());
+        //    }
+        //}
     }
 
     private int deadTanks()
     {
         int counter = 0;
-        for (int i = 0; i < maxTanks; i++)
+        for (int i = 0; i < currentPlayers; i++)
             if (tc[i].isDead)
             {
                 counter++;
@@ -296,27 +266,27 @@ public class GameController : MonoBehaviour
     {
         // 3 second to assure that winner is still alive
         yield return new WaitForSeconds(3);
-        Debug.Log(deadTanks() + " oraz " + maxTanks);
-        if (deadTanks() == maxTanks)
-        {
-            StartCoroutine(finishRound());
-        }
-        else if (deadTanks() == maxTanks - 1)
-        {
-            for (int i = 0; i < maxTanks; i++)
-            {
-                if (!tc[i].isDead)
-                {
-                    tc[i].points++;
-                }
-            }
-            StartCoroutine(finishRound());
-        }
-        else
-        {
-            Debug.Log("?????? Blad ??????");
-            StartCoroutine(finishRound());
-        }
+        //Debug.Log(deadTanks() + " oraz " + maxTanks);
+        //if (deadTanks() == maxTanks)
+        //{
+        //    StartCoroutine(finishRound());
+        //}
+        //else if (deadTanks() == maxTanks - 1)
+        //{
+        //    for (int i = 0; i < maxTanks; i++)
+        //    {
+        //        if (!tc[i].isDead)
+        //        {
+        //            tc[i].points++;
+        //        }
+        //    }
+        //    StartCoroutine(finishRound());
+        //}
+        //else
+        //{
+        //    Debug.Log("?????? Blad ??????");
+        //    StartCoroutine(finishRound());
+        //}
     }
 
     IEnumerator finishRound()

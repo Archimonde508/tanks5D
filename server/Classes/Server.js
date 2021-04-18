@@ -12,7 +12,10 @@ module.exports = class Server {
     onConnected(socket) {
         console.log("client connected")
         
-        socket.send(JSON.stringify({type: "position", message: JSON.stringify({x: 112, y: 122, tankId: 1})}))
+        // socket.send(JSON.stringify({
+        //     type: "position", 
+        //     message: JSON.stringify({x: 112, y: 122, tankId: 1})
+        // }))
         // TODO send position of other tanks to that user
         // TODO send position of this tank to other users
     }

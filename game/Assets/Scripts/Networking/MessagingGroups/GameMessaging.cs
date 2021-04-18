@@ -11,8 +11,13 @@ public class GameMessaging : BaseMessaging
     public const string Init = "init";
     /*public UnityAction OnConnectedToServer;*/
 
-    public void OnConnectedToServer()
+
+    public void OnConnectedToServer(InitMessageModel received, GameController gameController)
     {
+        int x = received.x;
+        int z = received.y;
+        int id = received.tankId;
+        gameController.addPlayer(id, x, z);
         var message = new MessageModel
         {
             type = "position",
