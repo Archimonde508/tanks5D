@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.Events;
+using System.Collections;
 
 /// <summary>
 /// Class holding lobby messages.
@@ -14,7 +15,7 @@ public class GameMessaging : BaseMessaging
 
     public void OnFirstMessage(FirstMessageModel received, GameController gameController)
     {
-        gameController.your_id = received.id_given;
+        GameController.your_id = received.id_given;
     }
 
 
@@ -25,32 +26,36 @@ public class GameMessaging : BaseMessaging
 
     public void OnConnectedToServer(InitMessageModel received, GameController gameController)
     {
-
         // set gamecontroller
-
         int x = received.x;
         int z = received.y;
         int id = received.tankId;
         gameController.addPlayer(id, x, z);
+    }
+
+
+    public const string Position = "position";
+    /*public UnityAction<PositionMessagModel> OnEchoMessage;*/
+
+    public void EchoPositionMessage(TankController tank)
+    {
         var message = new MessageModel
         {
             type = "position",
             message = JsonUtility.ToJson(new PositionMessageModel()
             {
-                x = 0,
-                y = 0,
-                tankId = 0
+                x = tank.transform.position.x,
+                y = tank.transform.position.z,
+                rotation = tank.transform.eulerAngles.y,
+                tankId = GameController.your_id
             })
         };
         client.SendRequest(JsonUtility.ToJson(message));
     }
 
-    public const string Position = "position";
-    /*public UnityAction<PositionMessagModel> OnEchoMessage;*/
-
-    public void OnPositionMessage(PositionMessageModel message)
+    public void OnPositionMessage(PositionMessageModel message, GameController gameController)
     {
-        Debug.Log("Spawn new opponent");
+        gameController.tc[message.tankId].setPosition(message.x, message.y, message.rotation);
     }
 
     public const string Movement = "movement";
@@ -85,7 +90,7 @@ public class GameMessaging : BaseMessaging
         }
     }
     
-    public void EchoMovementMessage(MovementMessageModel.Action action, bool pressed)
+    public void EchoMovementMessage(MovementMessageModel.Action action, bool pressed, GameController gameController)
     {
         var message = new MessageModel
         {
@@ -93,7 +98,8 @@ public class GameMessaging : BaseMessaging
             message = JsonUtility.ToJson(new MovementMessageModel()
             {
                 action = action,
-                pressed = pressed
+                pressed = pressed,
+                id = GameController.your_id
             })
         };
         client.SendRequest(JsonUtility.ToJson(message));

@@ -29,6 +29,8 @@ public class WsClient
     private Thread receiveThread { get; set; }
     private Thread sendThread { get; set; }
 
+    private Thread closeThread { get; set; }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="T:WsClient"/> class.
     /// </summary>
@@ -110,16 +112,16 @@ public class WsClient
         ArraySegment<byte> msg;
         while (true)
         {
-            while(IsConnectionOpen())
+            while (IsConnectionOpen())
             {
                 while (!sendQueue.IsCompleted)
                 {
                     msg = sendQueue.Take();
-                    Debug.Log("Dequeued this message to send: " + msg);
+                    //Debug.Log("Dequeued this message to send: " + msg);
                     await ws.SendAsync(msg, WebSocketMessageType.Text, true /* is last part of message */, CancellationToken.None);
                 }
             }
-            
+
         }
     }
 
@@ -144,13 +146,25 @@ public class WsClient
         {
             do
             {
-                chunkResult = await ws.ReceiveAsync(arrayBuf, CancellationToken.None);
-                ms.Write(arrayBuf.Array, arrayBuf.Offset, chunkResult.Count);
-                //Debug.Log("Size of Chunk message: " + chunkResult.Count);
-                if ((UInt64)(chunkResult.Count) > MAXREADSIZE)
+                try
                 {
-                    Console.Error.WriteLine("Warning: Message is bigger than expected!");
+                    chunkResult = await ws.ReceiveAsync(arrayBuf, CancellationToken.None);
+                    ms.Write(arrayBuf.Array, arrayBuf.Offset, chunkResult.Count);
+                    //Debug.Log("Size of Chunk message: " + chunkResult.Count);
+                    if ((UInt64)(chunkResult.Count) > MAXREADSIZE)
+                    {
+                        Console.Error.WriteLine("Warning: Message is bigger than expected!");
+                    }
                 }
+                catch (WebSocketException webSocketException)
+                {
+                    if (webSocketException.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
+                    {
+                        Debug.Log("disconnect");
+                        await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
+                    }
+                }
+
             } while (!chunkResult.EndOfMessage);
             ms.Seek(0, SeekOrigin.Begin);
 
@@ -188,4 +202,12 @@ public class WsClient
     }
 
     #endregion
+
+    async public void onDestroy()
+    {
+        receiveThread.Abort();
+        sendThread.Abort();
+        await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
+        Debug.Log("Aborted threads");
+    }
 }

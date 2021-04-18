@@ -1,14 +1,6 @@
 let Server = require('./Classes/Server')
 
 var currentPlayers = 0;
-var alreadyUsedX = [];
-var alreadyUsedZ = [];
-var xList = [13, 6, 3, -3, 8];
-var zList = [-34, 18, 9, 2, -15];
-var positionsNo = xList.length
-
-var activeX = []
-var activeZ = []
 
 const WebSocket = require('ws')
 
@@ -20,51 +12,17 @@ let server = new Server(wss, process.env.PORT == undefined);
 
 wss.on('connection', (ws) => {
     let connection = server.onConnected(ws)
-    var spawnCords = generateSpawn()
 
-    server.addNewClient(ws, currentPlayers)
-
-    activeX.push(spawnCords.x)
-    activeZ.push(spawnCords.z)
-
-    ws.send(JSON.stringify({
-        type: "first",  
-        message: JSON.stringify(
-            {
-                id_given: currentPlayers
-            })
-    }))
-
-    for(var i = 0; i < currentPlayers; i++){
-        ws.send(JSON.stringify({
-            type: "init",  
-            message: JSON.stringify(
-                {
-                    x: activeX[i], 
-                    y: activeZ[i], 
-                    tankId: i
-                })
-        }))
-    }
-
-    ws.send(JSON.stringify({
-        type: "init",  
-        message: JSON.stringify(
-        {
-            x: spawnCords.x, 
-            y: spawnCords.z, 
-            tankId: currentPlayers
-        })
-    }))
+    let client = server.connectNewClient(ws, currentPlayers)
 
     // tell other players that new user joined
     wss.broadcast(JSON.stringify({
         type: "init",  
         message: JSON.stringify(
         {
-            x: spawnCords.x, 
-            y: spawnCords.z, 
-            tankId: currentPlayers
+            x: client.x, 
+            y: client.z, 
+            tankId: client.id
         })
     }),ws)
 
@@ -78,9 +36,9 @@ wss.on('connection', (ws) => {
         console.log('listening on 3000')
     })
 
-    ws.on('disconnect', (ws)=>{
-        console.log('disconnected');
-        currentPlayers--;
+    ws.on('close', ()=>{
+        console.log('closed');
+        server.disconnectClient(ws)
     }) 
     
 })
@@ -92,36 +50,4 @@ wss.broadcast = function(data, sender) {
             client.send(data)
         }
     })
-}
-
-function generateSpawn(){
-    if(alreadyUsedX.length == 0){
-        var index = Math.floor(Math.random() * positionsNo);
-        var x = xList[index];
-        index = Math.floor(Math.random() * positionsNo);
-        var z = zList[index];
-        alreadyUsedX.push(x);
-        alreadyUsedZ.push(z);
-    }else{
-        while(true){
-            var index = Math.floor(Math.random() * positionsNo);
-            var x = xList[index];
-            index = Math.floor(Math.random() * positionsNo);
-            var z = zList[index];
-        
-            if(alreadyUsedX.includes(x) || alreadyUsedZ.includes(z)){
-                continue;
-            }else{
-                alreadyUsedX.push(x);
-                alreadyUsedZ.push(z);
-                break;
-            }
-        }
-    }
-    var value = {
-        x: x,
-        z: z,
-      };
-
-    return value;
 }

@@ -1,4 +1,6 @@
 ﻿using UnityEngine;
+using System.Threading;
+using System.Threading.Tasks;
 
 /// <summary>
 /// Forefront class for the server communication.
@@ -88,7 +90,8 @@ public class ServerCommunication : MonoBehaviour
                     );
                 break;
             case GameMessaging.Position:
-                GameMsg.OnPositionMessage(JsonUtility.FromJson<PositionMessageModel>(message.message));
+                GameMsg.OnPositionMessage(JsonUtility.FromJson<PositionMessageModel>(message.message),
+                    gameController);
                 break;
             case GameMessaging.Movement:
                 GameMsg.OnMovementMessage(
@@ -117,5 +120,12 @@ public class ServerCommunication : MonoBehaviour
     public void SendRequest(string message)
     {
         client.Send(message);
+    }
+
+    private void OnDestroy()
+    {
+        Thread disconnectThread = new Thread(client.onDestroy);
+        disconnectThread.Start();
+        disconnectThread.Join();
     }
 }

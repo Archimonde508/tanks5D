@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
+
 public class GameController : MonoBehaviour
 {
     const int maxTanks = 3;
@@ -15,7 +16,7 @@ public class GameController : MonoBehaviour
     int spawnPositionsNo = 5;
     public GameObject projectilePrefab;
     int currentPlayers = 0;
-    public int your_id;
+    static public int your_id;
 
     [SerializeField]
     private ServerCommunication communication;
@@ -60,7 +61,21 @@ public class GameController : MonoBehaviour
     private void Awake()
     {     
         communication.ConnectToServer();
-        //nextRound();
+        StartCoroutine("sendPosition");
+    }
+
+    IEnumerator sendPosition()
+    {
+        while(true)
+        {
+            TankController cur = tc[your_id];
+            if (cur != null)
+            {
+                communication.GameMsg.EchoPositionMessage(cur);
+            }
+            yield return new WaitForSeconds(1f);
+        }
+        
     }
 
     public void ManageKeyboard()
@@ -73,47 +88,47 @@ public class GameController : MonoBehaviour
             GameMessaging gm = communication.GameMsg;
             if (!cur.movingForward && Input.GetKey(cur.forwardKey))
             {
-                gm.EchoMovementMessage(MovementMessageModel.Action.Forward, true);
+                gm.EchoMovementMessage(MovementMessageModel.Action.Forward, true, this);
                 cur.movingForward = true;
             }
             if (cur.movingForward && Input.GetKeyUp(cur.forwardKey))
             {
-                gm.EchoMovementMessage(MovementMessageModel.Action.Forward, false);
+                gm.EchoMovementMessage(MovementMessageModel.Action.Forward, false, this);
                 cur.movingForward = false;
                 cur.stopTank = true;
             }
 
             if (!cur.movingBackward && Input.GetKey(cur.backwardKey))
             {
-                gm.EchoMovementMessage(MovementMessageModel.Action.Backward, true);
+                gm.EchoMovementMessage(MovementMessageModel.Action.Backward, true, this);
                 cur.movingBackward = true;
             }
             if (cur.movingBackward && Input.GetKeyUp(cur.backwardKey))
             {
-                gm.EchoMovementMessage(MovementMessageModel.Action.Backward, false);
+                gm.EchoMovementMessage(MovementMessageModel.Action.Backward, false, this);
                 cur.movingBackward = false;
                 cur.stopTank = true;
             }
 
             if (!cur.turningRight && Input.GetKey(cur.rotateRightKey))
             {
-                gm.EchoMovementMessage(MovementMessageModel.Action.Rot_right, true);
+                gm.EchoMovementMessage(MovementMessageModel.Action.Rot_right, true, this);
                 cur.turningRight = true;
             }
             if (cur.turningRight && Input.GetKeyUp(cur.rotateRightKey))
             {
-                gm.EchoMovementMessage(MovementMessageModel.Action.Rot_right, false);
+                gm.EchoMovementMessage(MovementMessageModel.Action.Rot_right, false, this);
                 cur.turningRight = false;
             }
 
             if (!cur.turningLeft && Input.GetKey(cur.rotateLeftKey))
             {
-                gm.EchoMovementMessage(MovementMessageModel.Action.Rot_left, true);
+                gm.EchoMovementMessage(MovementMessageModel.Action.Rot_left, true, this);
                 cur.turningLeft = true;
             }
             if (cur.turningLeft && Input.GetKeyUp(cur.rotateLeftKey))
             {
-                gm.EchoMovementMessage(MovementMessageModel.Action.Rot_left, false);
+                gm.EchoMovementMessage(MovementMessageModel.Action.Rot_left, false, this);
                 cur.turningLeft = false;
             }
 
@@ -122,7 +137,6 @@ public class GameController : MonoBehaviour
                 gm.EchoFireMessage();
                 cur.barrelScript.Fire();
             }
-
             if (Input.GetKeyUp(KeyCode.Z))
             {
                 for (int i = 0; i < currentPlayers; i++)
@@ -201,7 +215,7 @@ public class GameController : MonoBehaviour
     {
         ManageKeyboard();
         MoveTank();
-        
+
         //if (!isRoundFinished)
         //{
         //    if (deadTanks() == maxTanks)
