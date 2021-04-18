@@ -99,6 +99,12 @@ public class ServerCommunication : MonoBehaviour
                     gameController
                     );
                 break;
+            case GameMessaging.Fire:
+                GameMsg.OnFireMessage(
+                    JsonUtility.FromJson<FireMessageModel>(message.message),
+                    gameController
+                    );
+                break;
             default:
                 Debug.LogError("Unknown type of method: " + message.type);
                 break;

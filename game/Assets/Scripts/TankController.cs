@@ -48,6 +48,7 @@ public class TankController : MonoBehaviour
         }
         if (isDead && !died)
         {
+
             died = true; //call this only once
 
             GetComponent<AudioSource>().time = 0.4f;

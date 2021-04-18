@@ -62,7 +62,6 @@ public class GameController : MonoBehaviour
     {     
         communication.ConnectToServer();
         StartCoroutine("sendPosition");
-        //nextRound();
     }
 
     IEnumerator sendPosition()
@@ -72,9 +71,12 @@ public class GameController : MonoBehaviour
             TankController cur = tc[your_id];
             if (cur != null)
             {
-                communication.GameMsg.EchoPositionMessage(cur);
+                if (!cur.isDead)
+                {
+                    communication.GameMsg.EchoPositionMessage(cur);
+                }
             }
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(0.05f);
         }
         
     }
@@ -138,6 +140,19 @@ public class GameController : MonoBehaviour
                 gm.EchoFireMessage();
                 cur.barrelScript.Fire();
             }
+            if (Input.GetKeyUp(KeyCode.Z))
+            {
+                for (int i = 0; i < currentPlayers; i++)
+                {
+                    Debug.Log(
+                        "(" + currentPlayers + ")" + "[" + i + "]" +
+                        " " + tanks[i].transform.position.x +
+                        " | " + tanks[i].transform.position.z + "|" +
+                        tc[i].movingBackward + tc[i].movingForward +
+                        tc[i].turningLeft + tc[i].turningRight
+                        );
+                }
+            }
         }
     }
 
@@ -155,11 +170,13 @@ public class GameController : MonoBehaviour
                     // Dlatego "zerujemy" te wartosc. (Inaczej bedzie ciagle malec na skutek -= gravity)
                     // Nie piszemy moveDirection.y = 0, lecz moveDirection.y = -1, bo w innym wypadku controller.isGrounded nie dziala poprawnie. 
                 }
+
                 if (cur.movingForward)
                 {
                     cur.movingDirection = new Vector3(0, cur.movingDirection.y, 1);
                     cur.movingDirection *= cur.forwardSpeed;
                 }
+
                 if (cur.movingBackward)
                 {
                     cur.movingDirection = new Vector3(0, cur.movingDirection.y, -1);
@@ -184,7 +201,13 @@ public class GameController : MonoBehaviour
                 }
 
                 cur.movingDirection = tanks[i].transform.TransformDirection(cur.movingDirection);
+
+                if (Input.GetKeyUp(KeyCode.P))
+                {
+                    Debug.Log(cur.movingDirection + "|" + cur.rotation);
+                }
                 cur.controller.Move(cur.movingDirection * Time.deltaTime);
+                
                 cur.transform.eulerAngles = new Vector3(0, cur.rotation, 0); // y, bo obrot do okola osi pionowej
                 tc[i].rotation %= 360f;
             }

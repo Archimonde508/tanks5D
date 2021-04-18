@@ -71,9 +71,12 @@ public class GameController : MonoBehaviour
             TankController cur = tc[your_id];
             if (cur != null)
             {
-                communication.GameMsg.EchoPositionMessage(cur);
+                if (!cur.isDead)
+                {
+                    communication.GameMsg.EchoPositionMessage(cur);
+                }
             }
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(0.05f);
         }
         
     }
