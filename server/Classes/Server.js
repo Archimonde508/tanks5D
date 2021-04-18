@@ -136,7 +136,7 @@ module.exports = class Server {
         if(parsed.type == 'movement')
         {
             console.log(JSON.parse(parsed.message))
-            console.log(data)
+            //console.log(data)
             this.websocketServer.broadcast(data, socket);
         }
         

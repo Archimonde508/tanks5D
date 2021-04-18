@@ -96,6 +96,7 @@ public class GameController : MonoBehaviour
             {
                 gm.EchoMovementMessage(MovementMessageModel.Action.Forward, false, this);
                 cur.movingForward = false;
+                cur.stopTank = true;
             }
 
             if (!cur.movingBackward && Input.GetKey(cur.backwardKey))
@@ -107,6 +108,7 @@ public class GameController : MonoBehaviour
             {
                 gm.EchoMovementMessage(MovementMessageModel.Action.Backward, false, this);
                 cur.movingBackward = false;
+                cur.stopTank = true;
             }
 
             if (!cur.turningRight && Input.GetKey(cur.rotateRightKey))
@@ -164,9 +166,10 @@ public class GameController : MonoBehaviour
                     cur.movingDirection *= cur.backwardSpeed;
                 }
 
-                if (Input.GetKeyUp(cur.backwardKey) || Input.GetKeyUp(cur.forwardKey))
+                if (cur.stopTank)
                 {
                     cur.movingDirection = new Vector3(0, cur.movingDirection.y, 0);
+                    cur.stopTank = false;
                 }
 
 
