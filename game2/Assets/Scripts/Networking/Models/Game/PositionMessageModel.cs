@@ -3,6 +3,7 @@
 public class PositionMessageModel
 {
     public int tankId;
-    public int x;
-    public int y;
+    public float x;
+    public float y;
+    public float rotation;
 }

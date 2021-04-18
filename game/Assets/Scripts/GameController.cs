@@ -16,7 +16,7 @@ public class GameController : MonoBehaviour
     int spawnPositionsNo = 5;
     public GameObject projectilePrefab;
     int currentPlayers = 0;
-    public int your_id;
+    static public int your_id;
 
     [SerializeField]
     private ServerCommunication communication;
@@ -61,7 +61,21 @@ public class GameController : MonoBehaviour
     private void Awake()
     {     
         communication.ConnectToServer();
-        //nextRound();
+        StartCoroutine("sendPosition");
+    }
+
+    IEnumerator sendPosition()
+    {
+        while(true)
+        {
+            TankController cur = tc[your_id];
+            if (cur != null)
+            {
+                communication.GameMsg.EchoPositionMessage(cur);
+            }
+            yield return new WaitForSeconds(1f);
+        }
+        
     }
 
     public void ManageKeyboard()
@@ -177,7 +191,7 @@ public class GameController : MonoBehaviour
     {
         ManageKeyboard();
         MoveTank();
-        
+
         //if (!isRoundFinished)
         //{
         //    if (deadTanks() == maxTanks)
