@@ -1,5 +1,4 @@
 let Server = require('./Classes/Server')
-let server = new Server(process.env.PORT == undefined);
 
 var currentPlayers = 0;
 var alreadyUsedX = [];
@@ -12,14 +11,18 @@ var activeX = []
 var activeZ = []
 
 const WebSocket = require('ws')
+
 const wss = new WebSocket.Server({ port: 3000 },()=>{
     console.log('server started')
 })
-wss.on('connection', (ws) => {
-    let connection = server.onConnected(ws);
 
-    
-    var spawnCords = generateSpawn();
+let server = new Server(wss, process.env.PORT == undefined);
+
+wss.on('connection', (ws) => {
+    let connection = server.onConnected(ws)
+    var spawnCords = generateSpawn()
+
+    server.addNewClient(ws, currentPlayers)
 
     activeX.push(spawnCords.x)
     activeZ.push(spawnCords.z)
@@ -47,19 +50,28 @@ wss.on('connection', (ws) => {
     ws.send(JSON.stringify({
         type: "init",  
         message: JSON.stringify(
-            {
-                x: spawnCords.x, 
-                y: spawnCords.z, 
-                tankId: currentPlayers
-            })
+        {
+            x: spawnCords.x, 
+            y: spawnCords.z, 
+            tankId: currentPlayers
+        })
     }))
-    
-    console.log("haha");
+
+    // tell other players that new user joined
+    wss.broadcast(JSON.stringify({
+        type: "init",  
+        message: JSON.stringify(
+        {
+            x: spawnCords.x, 
+            y: spawnCords.z, 
+            tankId: currentPlayers
+        })
+    }),ws)
+
     currentPlayers++;
     
     ws.on('message', (data) => {
         server.handleMessage(ws, data);
-        console.log('data received \n %o', data)
     })
 
     ws.on('listening',()=>{
@@ -68,9 +80,19 @@ wss.on('connection', (ws) => {
 
     ws.on('disconnect', (ws)=>{
         console.log('disconnected');
+        currentPlayers--;
     }) 
     
 })
+
+// broadcast message to all clients without client that sent this message
+wss.broadcast = function(data, sender) {
+    wss.clients.forEach(function(client) {
+        if (client !== sender) {
+            client.send(data)
+        }
+    })
+}
 
 function generateSpawn(){
     if(alreadyUsedX.length == 0){
