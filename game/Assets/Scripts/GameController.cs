@@ -121,13 +121,6 @@ public class GameController : MonoBehaviour
                 cur.barrelScript.Fire();
             }
         }
-
-
-        //for (int i = 0; i < currentPlayers; i++)
-        //{
-            
-            
-        //}
     }
 
     void MoveTank()

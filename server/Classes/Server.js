@@ -53,7 +53,7 @@ module.exports = class Server {
         if(parsed.type == 'movement')
         {
             console.log(JSON.parse(parsed.message))
-            this.websocketServer.broadcast(parsed, socket);
+            this.websocketServer.broadcast(data, socket);
         }
         
     }

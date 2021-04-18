@@ -55,9 +55,25 @@ public class GameMessaging : BaseMessaging
 
     public const string Movement = "movement";
 
-    public void OnMovementMessage(MovementMessageModel message)
+    public void OnMovementMessage(MovementMessageModel message, GameController gameController)
     {
-        Debug.Log("Opponent moved");
+        int id = message.id;
+        if(message.action == MovementMessageModel.Action.Forward)
+        {
+            gameController.tc[id].movingForward = message.pressed;
+        }
+        if (message.action == MovementMessageModel.Action.Backward)
+        {
+            gameController.tc[id].movingBackward = message.pressed;
+        }
+        if (message.action == MovementMessageModel.Action.Rot_right)
+        {
+            gameController.tc[id].turningRight = message.pressed;
+        }
+        if (message.action == MovementMessageModel.Action.Rot_left)
+        {
+            gameController.tc[id].turningLeft = message.pressed;
+        }
     }
     
     public void EchoMovementMessage(MovementMessageModel.Action action, bool pressed)
