@@ -91,7 +91,10 @@ public class ServerCommunication : MonoBehaviour
                 GameMsg.OnPositionMessage(JsonUtility.FromJson<PositionMessageModel>(message.message));
                 break;
             case GameMessaging.Movement:
-                GameMsg.OnMovementMessage(JsonUtility.FromJson<MovementMessageModel>(message.message));
+                GameMsg.OnMovementMessage(
+                    JsonUtility.FromJson<MovementMessageModel>(message.message),
+                    gameController
+                    );
                 break;
             default:
                 Debug.LogError("Unknown type of method: " + message.type);

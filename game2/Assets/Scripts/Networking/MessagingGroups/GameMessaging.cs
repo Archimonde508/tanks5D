@@ -76,7 +76,7 @@ public class GameMessaging : BaseMessaging
         }
     }
     
-    public void EchoMovementMessage(MovementMessageModel.Action action, bool pressed)
+    public void EchoMovementMessage(MovementMessageModel.Action action, bool pressed, GameController gameController)
     {
         var message = new MessageModel
         {
@@ -84,7 +84,8 @@ public class GameMessaging : BaseMessaging
             message = JsonUtility.ToJson(new MovementMessageModel()
             {
                 action = action,
-                pressed = pressed
+                pressed = pressed,
+                id = gameController.your_id
             })
         };
         client.SendRequest(JsonUtility.ToJson(message));

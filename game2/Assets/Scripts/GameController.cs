@@ -73,45 +73,45 @@ public class GameController : MonoBehaviour
             GameMessaging gm = communication.GameMsg;
             if (!cur.movingForward && Input.GetKey(cur.forwardKey))
             {
-                gm.EchoMovementMessage(MovementMessageModel.Action.Forward, true);
+                gm.EchoMovementMessage(MovementMessageModel.Action.Forward, true, this);
                 cur.movingForward = true;
             }
             if (cur.movingForward && Input.GetKeyUp(cur.forwardKey))
             {
-                gm.EchoMovementMessage(MovementMessageModel.Action.Forward, false);
+                gm.EchoMovementMessage(MovementMessageModel.Action.Forward, false, this);
                 cur.movingForward = false;
             }
 
             if (!cur.movingBackward && Input.GetKey(cur.backwardKey))
             {
-                gm.EchoMovementMessage(MovementMessageModel.Action.Backward, true);
+                gm.EchoMovementMessage(MovementMessageModel.Action.Backward, true, this);
                 cur.movingBackward = true;
             }
             if (cur.movingBackward && Input.GetKeyUp(cur.backwardKey))
             {
-                gm.EchoMovementMessage(MovementMessageModel.Action.Backward, false);
+                gm.EchoMovementMessage(MovementMessageModel.Action.Backward, false, this);
                 cur.movingBackward = false;
             }
 
             if (!cur.turningRight && Input.GetKey(cur.rotateRightKey))
             {
-                gm.EchoMovementMessage(MovementMessageModel.Action.Rot_right, true);
+                gm.EchoMovementMessage(MovementMessageModel.Action.Rot_right, true, this);
                 cur.turningRight = true;
             }
             if (cur.turningRight && Input.GetKeyUp(cur.rotateRightKey))
             {
-                gm.EchoMovementMessage(MovementMessageModel.Action.Rot_right, false);
+                gm.EchoMovementMessage(MovementMessageModel.Action.Rot_right, false, this);
                 cur.turningRight = false;
             }
 
             if (!cur.turningLeft && Input.GetKey(cur.rotateLeftKey))
             {
-                gm.EchoMovementMessage(MovementMessageModel.Action.Rot_left, true);
+                gm.EchoMovementMessage(MovementMessageModel.Action.Rot_left, true, this);
                 cur.turningLeft = true;
             }
             if (cur.turningLeft && Input.GetKeyUp(cur.rotateLeftKey))
             {
-                gm.EchoMovementMessage(MovementMessageModel.Action.Rot_left, false);
+                gm.EchoMovementMessage(MovementMessageModel.Action.Rot_left, false, this);
                 cur.turningLeft = false;
             }
 

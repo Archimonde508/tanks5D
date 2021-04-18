@@ -55,12 +55,28 @@ public class GameMessaging : BaseMessaging
 
     public const string Movement = "movement";
 
-    public void OnMovementMessage(MovementMessageModel message)
+    public void OnMovementMessage(MovementMessageModel message, GameController gameController)
     {
-        Debug.Log("Opponent moved");
+        int id = message.id;
+        if(message.action == MovementMessageModel.Action.Forward)
+        {
+            gameController.tc[id].movingForward = message.pressed;
+        }
+        if (message.action == MovementMessageModel.Action.Backward)
+        {
+            gameController.tc[id].movingBackward = message.pressed;
+        }
+        if (message.action == MovementMessageModel.Action.Rot_right)
+        {
+            gameController.tc[id].turningRight = message.pressed;
+        }
+        if (message.action == MovementMessageModel.Action.Rot_left)
+        {
+            gameController.tc[id].turningLeft = message.pressed;
+        }
     }
     
-    public void EchoMovementMessage(MovementMessageModel.Action action, bool pressed)
+    public void EchoMovementMessage(MovementMessageModel.Action action, bool pressed, GameController gameController)
     {
         var message = new MessageModel
         {
@@ -68,7 +84,8 @@ public class GameMessaging : BaseMessaging
             message = JsonUtility.ToJson(new MovementMessageModel()
             {
                 action = action,
-                pressed = pressed
+                pressed = pressed,
+                id = gameController.your_id
             })
         };
         client.SendRequest(JsonUtility.ToJson(message));
