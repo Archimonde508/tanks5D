@@ -20,8 +20,8 @@ wss.on('connection', (ws) => {
         type: "init",  
         message: JSON.stringify(
         {
-            x: client.spawnX, 
-            y: client.spawnZ, 
+            x: client.x, 
+            y: client.z, 
             tankId: client.id
         })
     }),ws)

@@ -1,8 +1,8 @@
 module.exports = class Client {
-    constructor(socket, spawnX, spawnY, id) {
+    constructor(socket, spawnX, spawnZ, id) {
         this.socket = socket;
         this.x = spawnX;
-        this.y = spawnY;
+        this.z = spawnZ;
         this.id = id; // = tankId
     }
 }

@@ -33,8 +33,8 @@ module.exports = class Server {
                 type: "init",  
                 message: JSON.stringify(
                 {
-                    x: client.activeX, 
-                    y: client.activeZ, 
+                    x: client.x, 
+                    y: client.z, 
                     tankId: client.id
                 })
             }))
@@ -42,6 +42,7 @@ module.exports = class Server {
 
         let client = new Client(socket, spawnCords.x, spawnCords.z, id);
         this.clients.push(client)
+
 
         socket.send(JSON.stringify({
             type: "init",  
