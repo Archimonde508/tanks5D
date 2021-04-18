@@ -7,6 +7,9 @@ var xList = [13, 6, 3, -3, 8];
 var zList = [-34, 18, 9, 2, -15];
 var positionsNo = xList.length
 
+var activeX = []
+var activeZ = []
+
 const WebSocket = require('ws')
 
 const wss = new WebSocket.Server({ port: 3000 },()=>{
@@ -20,6 +23,29 @@ wss.on('connection', (ws) => {
     var spawnCords = generateSpawn()
 
     server.addNewClient(ws, currentPlayers)
+
+    activeX.push(spawnCords.x)
+    activeZ.push(spawnCords.z)
+
+    ws.send(JSON.stringify({
+        type: "first",  
+        message: JSON.stringify(
+            {
+                id_given: currentPlayers
+            })
+    }))
+
+    for(var i = 0; i < currentPlayers; i++){
+        ws.send(JSON.stringify({
+            type: "init",  
+            message: JSON.stringify(
+                {
+                    x: activeX[i], 
+                    y: activeZ[i], 
+                    tankId: i
+                })
+        }))
+    }
 
     ws.send(JSON.stringify({
         type: "init",  

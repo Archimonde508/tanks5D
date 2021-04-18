@@ -11,4 +11,5 @@ public class MovementMessageModel
     }
     public Action action;
     public bool pressed;
+    public int id;
 }

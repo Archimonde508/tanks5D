@@ -8,12 +8,26 @@ public class GameMessaging : BaseMessaging
 {
     public GameMessaging(ServerCommunication client) : base(client) { }
 
+
+    public const string First = "first";
+
+
+    public void OnFirstMessage(FirstMessageModel received, GameController gameController)
+    {
+        gameController.your_id = received.id_given;
+    }
+
+
     public const string Init = "init";
     /*public UnityAction OnConnectedToServer;*/
 
+    
 
     public void OnConnectedToServer(InitMessageModel received, GameController gameController)
     {
+
+        // set gamecontroller
+
         int x = received.x;
         int z = received.y;
         int id = received.tankId;

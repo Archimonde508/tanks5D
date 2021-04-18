@@ -75,11 +75,17 @@ public class ServerCommunication : MonoBehaviour
 
         switch (message.type)
         {
+            case GameMessaging.First:
+                GameMsg.OnFirstMessage(
+                     JsonUtility.FromJson<FirstMessageModel>(message.message),
+                     gameController
+                    );
+                break;
             case GameMessaging.Init:
                 GameMsg.OnConnectedToServer(
                     JsonUtility.FromJson<InitMessageModel>(message.message),
                     gameController
-                );
+                    );
                 break;
             case GameMessaging.Position:
                 GameMsg.OnPositionMessage(JsonUtility.FromJson<PositionMessageModel>(message.message));
