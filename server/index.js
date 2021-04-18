@@ -36,8 +36,8 @@ wss.on('connection', (ws) => {
         console.log('listening on 3000')
     })
 
-    ws.on('disconnect', (ws)=>{
-        console.log('disconnected');
+    ws.on('close', ()=>{
+        console.log('closed');
         server.disconnectClient(ws)
     }) 
     

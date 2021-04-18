@@ -22,7 +22,7 @@ module.exports = class Server {
             type: "first",  
             message: JSON.stringify(
                 {
-                    id_given: id
+                    id_given: id 
                 })
         }))
 
@@ -61,8 +61,10 @@ module.exports = class Server {
     {
         for(var i=0;i<this.clients.length; i++)
         {
+            // console.log(socket)
             if(this.clients[i].socket == socket)
             {
+                console.log("Client removed")
                 this.clients.splice(i,1)
                 break
             }
@@ -118,11 +120,6 @@ module.exports = class Server {
             this.websocketServer.broadcast(data, socket);
         }
         
-    }
-
-    //Handle a new connection to the server
-    onDisconnected(socket) {
-        console.log("client disconnected")
     }
 
     generateSpawn(){
