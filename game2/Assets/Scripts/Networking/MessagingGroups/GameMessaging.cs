@@ -74,6 +74,15 @@ public class GameMessaging : BaseMessaging
         {
             gameController.tc[id].turningLeft = message.pressed;
         }
+
+        if (message.action == MovementMessageModel.Action.Forward ||
+            message.action == MovementMessageModel.Action.Backward)
+        {
+            if (message.pressed == false)
+            {
+                gameController.tc[id].stopTank = true;
+            }
+        }
     }
     
     public void EchoMovementMessage(MovementMessageModel.Action action, bool pressed)

@@ -28,6 +28,8 @@ public class TankController : MonoBehaviour
     public bool movingBackward = false;
     public bool turningLeft = false;
     public bool turningRight = false;
+
+    public bool stopTank = false;
    
 
     private void Update()
