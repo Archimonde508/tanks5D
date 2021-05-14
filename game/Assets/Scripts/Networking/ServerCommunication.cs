@@ -9,7 +9,7 @@ public class ServerCommunication : MonoBehaviour
 {
     // Server IP address
     [SerializeField]
-    private string hostIP;
+    private string hostIP = "tanks-2d-online.herokuapp.com";
 
     // Server port
     [SerializeField]
@@ -17,7 +17,7 @@ public class ServerCommunication : MonoBehaviour
     
     // Flag to use localhost
     [SerializeField]
-    private bool useLocalhost = true;
+    private bool useLocalhost = false;
 
     // Address used in code
     private string host => useLocalhost ? "localhost" : hostIP;
@@ -96,6 +96,12 @@ public class ServerCommunication : MonoBehaviour
             case GameMessaging.Movement:
                 GameMsg.OnMovementMessage(
                     JsonUtility.FromJson<MovementMessageModel>(message.message),
+                    gameController
+                    );
+                break;
+            case GameMessaging.Fire:
+                GameMsg.OnFireMessage(
+                    JsonUtility.FromJson<FireMessageModel>(message.message),
                     gameController
                     );
                 break;

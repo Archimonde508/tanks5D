@@ -55,7 +55,10 @@ public class GameMessaging : BaseMessaging
 
     public void OnPositionMessage(PositionMessageModel message, GameController gameController)
     {
-        gameController.tc[message.tankId].setPosition(message.x, message.y, message.rotation);
+        if (!gameController.tc[message.tankId].isDead)
+        {
+            gameController.tc[message.tankId].setPosition(message.x, message.y, message.rotation);
+        }
     }
 
     public const string Movement = "movement";
@@ -80,10 +83,10 @@ public class GameMessaging : BaseMessaging
             gameController.tc[id].turningLeft = message.pressed;
         }
 
-        if (message.action == MovementMessageModel.Action.Forward ||
+        if(message.action == MovementMessageModel.Action.Forward ||
             message.action == MovementMessageModel.Action.Backward)
         {
-            if (message.pressed == false)
+            if(message.pressed == false)
             {
                 gameController.tc[id].stopTank = true;
             }
@@ -112,9 +115,18 @@ public class GameMessaging : BaseMessaging
             type = "fire",
             message = JsonUtility.ToJson(new FireMessageModel()
             {
+                id = GameController.your_id
             })
         };
         client.SendRequest(JsonUtility.ToJson(message));
+    }
+
+    public const string Fire = "fire";
+
+    public void OnFireMessage(FireMessageModel message, GameController gameController)
+    {
+        int id = message.id;
+        gameController.tc[id].barrelScript.Fire();
     }
 
 }

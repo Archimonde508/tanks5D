@@ -131,6 +131,7 @@ module.exports = class Server {
         if(parsed.type == 'fire')
         {
             console.log(JSON.parse(parsed.message))
+            this.websocketServer.broadcast(data, socket);
         }
 
         if(parsed.type == 'movement')
