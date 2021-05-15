@@ -9,7 +9,7 @@ public class ServerCommunication : MonoBehaviour
 {
     // Server IP address
     [SerializeField]
-    private string hostIP;
+    private string hostIP = "tanks-2d-online.herokuapp.com";
 
     // Server port
     [SerializeField]
@@ -25,7 +25,7 @@ public class ServerCommunication : MonoBehaviour
     private string server;
 
     // WebSocket Client
-    private WsClient client;
+    private WsClient client = new WsClient("ws://tanks-2d-online.herokuapp.com");
 
     // Class with messages for "game"
     public GameMessaging GameMsg { private set; get; }
@@ -38,7 +38,8 @@ public class ServerCommunication : MonoBehaviour
     {
         //gameController = GetComponent<GameController>();
         server = "ws://" + host + ":" + port;
-        client = new WsClient(server);
+        Debug.Log(server);
+        //client = new WsClient(server);
 
         // Messaging
         GameMsg = new GameMessaging(this);

@@ -3,10 +3,13 @@ let Server = require('./Classes/Server')
 
 
 const WebSocket = require('ws')
+const PORT = process.env.PORT || 3000;
 
-const wss = new WebSocket.Server({ port: 3000 },()=>{
+const wss = new WebSocket.Server({ port: PORT },()=>{
     console.log('server started')
+    console.log('listeing on port '+PORT)
 })
+
 
 let server = new Server(wss, process.env.PORT == undefined);
 
