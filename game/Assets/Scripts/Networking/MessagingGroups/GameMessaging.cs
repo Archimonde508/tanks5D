@@ -22,7 +22,7 @@ public class GameMessaging : BaseMessaging
     public const string Init = "init";
     /*public UnityAction OnConnectedToServer;*/
 
-    
+
 
     public void OnConnectedToServer(InitMessageModel received, GameController gameController)
     {
@@ -31,6 +31,7 @@ public class GameMessaging : BaseMessaging
         int z = received.y;
         int id = received.tankId;
         gameController.addPlayer(id, x, z);
+        gameController.healthStatusUI.playersNo++;
     }
 
 
@@ -66,7 +67,7 @@ public class GameMessaging : BaseMessaging
     public void OnMovementMessage(MovementMessageModel message, GameController gameController)
     {
         int id = message.id;
-        if(message.action == MovementMessageModel.Action.Forward)
+        if (message.action == MovementMessageModel.Action.Forward)
         {
             gameController.tc[id].movingForward = message.pressed;
         }
@@ -83,16 +84,16 @@ public class GameMessaging : BaseMessaging
             gameController.tc[id].turningLeft = message.pressed;
         }
 
-        if(message.action == MovementMessageModel.Action.Forward ||
+        if (message.action == MovementMessageModel.Action.Forward ||
             message.action == MovementMessageModel.Action.Backward)
         {
-            if(message.pressed == false)
+            if (message.pressed == false)
             {
                 gameController.tc[id].stopTank = true;
             }
         }
     }
-    
+
     public void EchoMovementMessage(MovementMessageModel.Action action, bool pressed, GameController gameController)
     {
         var message = new MessageModel
@@ -127,6 +128,42 @@ public class GameMessaging : BaseMessaging
     {
         int id = message.id;
         gameController.tc[id].barrelScript.Fire();
+    }
+
+    public const string Finish = "finish";
+
+    public void OnStartGameMessage(FinishMessageModel message, GameController gameController)
+    {
+        Debug.Log("zaczynamy");
+        gameController.StartGame();
+        // EchoPositionMessage - chyba nie trzeba bo i tak sie odswiezy zaraz
+    }
+
+    public const string NewRound = "newRound";
+
+    public void OnNewRoundMessage(NewRoundMessageModel message, GameController gameController)
+    {
+        Debug.Log("--------");
+        Debug.Log(gameController.tc[0].transform.position + 
+            " _ " + gameController.tc[1].transform.position);
+        Debug.Log("Dostalem nowa pozycje i zaczynam gre");
+        Debug.Log("Podnosimy czolg o id: " + message.tankId);
+        gameController.tc[message.tankId].setAlivePosition(message.x, message.y, message.rotation);
+        // EchoPositionMessage - chyba nie trzeba bo i tak sie odswiezy zaraz
+    }
+
+    public void EchoFinishMessage()
+    {
+        var message = new MessageModel
+        {
+            type = "finish",
+            message = JsonUtility.ToJson(new FinishMessageModel()
+            {
+                id = GameController.your_id,
+                context = "finish"
+            })
+        };
+        client.SendRequest(JsonUtility.ToJson(message));
     }
 
 }

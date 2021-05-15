@@ -67,14 +67,14 @@ public class ServerCommunication : MonoBehaviour
     /// <param name="msg">Message.</param>
     private void HandleMessage(string msg)
     {
-        Debug.Log("Server: " + msg);
+        //Debug.Log("Server: " + msg);
 
         // Deserializing message from the server
         var message = JsonUtility.FromJson<MessageModel>(msg);
 
         // Picking correct method for message handling
-        Debug.Log(message);
-        Debug.Log(message.type);
+        //Debug.Log(message);
+        //Debug.Log(message.type);
 
         switch (message.type)
         {
@@ -105,6 +105,18 @@ public class ServerCommunication : MonoBehaviour
                     JsonUtility.FromJson<FireMessageModel>(message.message),
                     gameController
                     );
+                break;
+            case GameMessaging.NewRound:
+                GameMsg.OnNewRoundMessage(
+                   JsonUtility.FromJson<NewRoundMessageModel>(message.message),
+                   gameController
+                   );
+                break;
+            case GameMessaging.Finish: //start game
+                GameMsg.OnStartGameMessage(
+                   JsonUtility.FromJson<FinishMessageModel>(message.message),
+                   gameController
+                   );
                 break;
             default:
                 Debug.LogError("Unknown type of method: " + message.type);
