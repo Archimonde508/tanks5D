@@ -1,10 +1,15 @@
 let Client = require('./Client.js')
 
-var alreadyUsedX = [];
-var alreadyUsedZ = [];
-var xList = [13, 6, 3, -3, 8];
-var zList = [-34, 18, 9, 2, -15];
-var positionsNo = xList.length
+
+var alreadyUsed = [];
+var spawnPositions = [
+    [0, 0], [0, 10], [0, 15], [0, -15], [0, -23],
+    [10, -32], [11, -11], [12, 10], [-7, 5]
+    // -8, 26 jest bledne
+];
+var currentPlayers = 0;
+var gameFinishedList = [];
+var positionsNo = spawnPositions.length
 
 module.exports = class Server {
     constructor(wss, isLocal = false) {
@@ -16,7 +21,7 @@ module.exports = class Server {
 
     generateFreeId()
     {
-        for(var i=0;i<3;i++)
+        for(var i = 0; i < 3; i++)
         {
             var free = true
             this.clients.forEach((client)=>{
@@ -33,8 +38,10 @@ module.exports = class Server {
     connectNewClient(socket) {
         var spawnCords = this.generateSpawn()
 
-        var id = this.generateFreeId()
+        console.log(spawnCords);
 
+        var id = this.generateFreeId()
+        gameFinishedList.push(false);
 
         // send tank id to connected user
         socket.send(JSON.stringify({
@@ -76,6 +83,38 @@ module.exports = class Server {
         return client
     }
 
+    zacznijGre(socket){
+        console.log("nanan zaczynamy gre");
+
+        this.clients.forEach((client)=>{
+            console.log("2 razy powinno sie pojawic");
+            client.socket.send(JSON.stringify({
+                type: "finish",  // new round
+                message: JSON.stringify(
+                {
+                    id: client.id,
+                    context: "start"
+                })
+            }))
+        })
+    }
+
+    incrementCurrentplayersBecuaseJsIsShit(){
+        currentPlayers++;
+        console.log(currentPlayers);
+    }
+
+    getCurrentPlayers(){
+        return currentPlayers;
+    }
+
+    startGame(){
+        gameFinishedList = new Array(currentPlayers);
+        for(var i = 0; i < currentPlayers; i++){
+            gameFinishedList[i] = false;
+        }
+    }
+
     disconnectClient(socket)
     {
         for(var i=0;i<this.clients.length; i++)
@@ -89,7 +128,6 @@ module.exports = class Server {
             }
         }
     }
-
 
     //Interval update every 100 miliseconds
     onUpdate() {
@@ -115,8 +153,12 @@ module.exports = class Server {
     }
 
     handleMessage(socket, data){
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
         let parsed = JSON.parse(data);
-        console.log('parsed', parsed)
+        //console.log('parsed', parsed)
 
         // tankId = parsed.id
         if(!this.validateMessage(parsed.id))
@@ -124,54 +166,98 @@ module.exports = class Server {
 
         if(parsed.type == 'position')
         {
-            console.log(JSON.parse(parsed.message))
+            //console.log(JSON.parse(parsed.message))
             this.websocketServer.broadcast(data, socket);
         }
 
         if(parsed.type == 'fire')
         {
-            console.log(JSON.parse(parsed.message))
+            //console.log(JSON.parse(parsed.message))
             this.websocketServer.broadcast(data, socket);
         }
 
         if(parsed.type == 'movement')
         {
-            console.log(JSON.parse(parsed.message))
-            //console.log(data)
+            //console.log(JSON.parse(parsed.message))
             this.websocketServer.broadcast(data, socket);
         }
+
+        if(parsed.type == 'finish'){   
+            parsed.message = JSON.parse(parsed.message)
+
+            var id = parsed.message.id; //read from json
+
+            gameFinishedList[id] = true;
+            console.log(this.allPlayersFinished());
+            if(this.allPlayersFinished()){
+                for(var i = 0; i < currentPlayers; i++){
+                    gameFinishedList[i] = false;
+                }
+                
+                console.log("Zaraz kolejna runda");
+                sleep(1000).then(() => { this.startNewRound()});
+
+            }
+        }        
+    }
+
+    startNewRound(){
+        this.clients.forEach((client)=>{
+            var spawnCords = this.generateSpawn();
+            console.log("new round starts");
+            var toSend = JSON.stringify({
+                type: "newRound",  
+                message: JSON.stringify(
+                {
+                    x: spawnCords.x, 
+                    y: spawnCords.z, 
+                    tankId: client.id
+                })
+            })
+            client.socket.send(toSend)
+
+            //broadcast wylosowanej pozycji 
+            this.websocketServer.broadcast(toSend, client.socket);
+        })
+
+
         
     }
 
+    allPlayersFinished(){
+        for(var i = 0; i < currentPlayers; i++){
+            if(gameFinishedList[i] == false){
+                return false;
+            }
+        }
+        return true;
+    }
+
     generateSpawn(){
-        if(alreadyUsedX.length == 0){
+        if(alreadyUsed.length == 0){
             var index = Math.floor(Math.random() * positionsNo);
-            var x = xList[index];
-            index = Math.floor(Math.random() * positionsNo);
-            var z = zList[index];
-            alreadyUsedX.push(x);
-            alreadyUsedZ.push(z);
+            var spawnPos = spawnPositions[index];
+            alreadyUsed.push(spawnPos);
         }else{
             while(true){
                 var index = Math.floor(Math.random() * positionsNo);
-                var x = xList[index];
-                index = Math.floor(Math.random() * positionsNo);
-                var z = zList[index];
+                var spawnPos = spawnPositions[index];
             
-                if(alreadyUsedX.includes(x) || alreadyUsedZ.includes(z)){
+                if(alreadyUsed.includes(spawnPos)){
                     continue;
                 }else{
-                    alreadyUsedX.push(x);
-                    alreadyUsedZ.push(z);
+                    alreadyUsed.push(spawnPos);
                     break;
                 }
             }
         }
-        var value = {
-            x: x,
-            z: z,
-          };
     
-        return value;
+        var returned = {
+            x: spawnPos[0],
+            z: spawnPos[1]
+        }
+
+        return returned;
     }
+
 }

@@ -9,14 +9,13 @@ public class GameController : MonoBehaviour
     const int maxTanks = 3;
     public GameObject[] tanks = new GameObject[maxTanks];
     public TankController[] tc = new TankController[maxTanks];
-    float gravity = -1.0f;
+    readonly float gravity = -1.0f;
     bool isRoundFinished = false;
-    List<float> spawnPositionsX = new List<float>();
-    List<float> spawnPositionsZ = new List<float>();
-    int spawnPositionsNo = 5;
     public GameObject projectilePrefab;
     int currentPlayers = 0;
     static public int your_id;
+    public bool gameStarted = false;
+    public HealthStatusUI healthStatusUI;
 
     [SerializeField]
     private ServerCommunication communication;
@@ -24,14 +23,14 @@ public class GameController : MonoBehaviour
     public void addPlayer(int id, int x, int z)
     {
         string idStr = (id + 1).ToString();
-        Vector3 vec3 = new Vector3(2.0f, 0.5f, 3.0f);
+        Vector3 vec3 = new Vector3(x, 0.5f, z);
         Vector3 rotVec = new Vector3(0.0f, 0.0f, 0.0f);
         Quaternion rotation = Quaternion.Euler(rotVec);
         tanks[id] = Instantiate(projectilePrefab, vec3, rotation);
         tanks[id].name = "Tank" + idStr;
         tc[id] = tanks[id].GetComponent<TankController>();
 
-        if(id == your_id)
+        if (id == your_id)
         {
             tc[id].forwardKey = KeyCode.W;
             tc[id].backwardKey = KeyCode.S;
@@ -46,7 +45,7 @@ public class GameController : MonoBehaviour
         {
             cubeRenderer.material.SetColor("_Color", Color.red);
         }
-        if(id == 1)
+        if (id == 1)
         {
             cubeRenderer.material.SetColor("_Color", Color.green);
         }
@@ -59,14 +58,14 @@ public class GameController : MonoBehaviour
     }
 
     private void Awake()
-    {     
+    {
         communication.ConnectToServer();
         StartCoroutine("sendPosition");
     }
 
     IEnumerator sendPosition()
     {
-        while(true)
+        while (true)
         {
             TankController cur = tc[your_id];
             if (cur != null)
@@ -78,15 +77,13 @@ public class GameController : MonoBehaviour
             }
             yield return new WaitForSeconds(0.05f);
         }
-        
     }
 
     public void ManageKeyboard()
     {
-
         TankController cur = tc[your_id];
 
-        if (tanks[your_id] != null && !cur.isDead)
+        if (tanks[your_id] != null && !cur.isDead && cur.movingEnabled)
         {
             GameMessaging gm = communication.GameMsg;
             if (!cur.movingForward && Input.GetKey(cur.forwardKey))
@@ -146,8 +143,8 @@ public class GameController : MonoBehaviour
                 {
                     Debug.Log(
                         "(" + currentPlayers + ")" + "[" + i + "]" +
-                        " " + tanks[i].transform.position.x +
-                        " | " + tanks[i].transform.position.z + "|" +
+                        " " + tanks[i].transform.rotation +
+                        " | " + "|" +
                         tc[i].movingBackward + tc[i].movingForward +
                         tc[i].turningLeft + tc[i].turningRight
                         );
@@ -161,7 +158,7 @@ public class GameController : MonoBehaviour
         for (int i = 0; i < currentPlayers; i++)
         {
             TankController cur = tc[i];
-            if (tanks[i] != null && !cur.isDead)
+            if (tanks[i] != null && !cur.isDead && cur.movingEnabled)
             {
                 if (cur.controller.isGrounded)
                 {
@@ -189,50 +186,51 @@ public class GameController : MonoBehaviour
                     cur.stopTank = false;
                 }
 
-
-                if (cur.turningRight)
-                {
-                    cur.rotation += cur.rotationSpeed * Time.deltaTime;
-                }
-
-                if (cur.turningLeft)
-                {
-                    cur.rotation -= cur.rotationSpeed * Time.deltaTime;
-                }
-
                 cur.movingDirection = tanks[i].transform.TransformDirection(cur.movingDirection);
 
-                if (Input.GetKeyUp(KeyCode.P))
-                {
-                    Debug.Log(cur.movingDirection + "|" + cur.rotation);
-                }
                 cur.controller.Move(cur.movingDirection * Time.deltaTime);
-                
-                cur.transform.eulerAngles = new Vector3(0, cur.rotation, 0); // y, bo obrot do okola osi pionowej
-                tc[i].rotation %= 360f;
+
+                if (i == your_id) //  rotate our tank only
+                {
+                    if (cur.turningRight)
+                    {
+                        cur.rotation += cur.rotationSpeed * Time.deltaTime;
+                    }
+
+                    if (cur.turningLeft)
+                    {
+                        cur.rotation -= cur.rotationSpeed * Time.deltaTime;
+                    }
+
+                    cur.transform.eulerAngles = new Vector3(0, cur.rotation, 0);
+                    cur.rotation %= 360f;
+                }
             }
         }
     }
 
     private void Update()
     {
-        ManageKeyboard();
-        MoveTank();
+        if (gameStarted)
+        {
+            ManageKeyboard();
+            MoveTank();
 
-        //if (!isRoundFinished)
-        //{
-        //    if (deadTanks() == maxTanks)
-        //    {
-        //        isRoundFinished = true;
-        //        StartCoroutine(finishRound());
-        //        nextRound();
-        //    }
-        //    if (deadTanks() == maxTanks - 1)
-        //    {
-        //        isRoundFinished = true;
-        //        StartCoroutine(waiter());
-        //    }
-        //}
+            // checking if round is finished
+            if (!isRoundFinished)
+            {
+                if (deadTanks() == currentPlayers)
+                {
+                    isRoundFinished = true;
+                    finishRound();
+                }
+                else if (deadTanks() == currentPlayers - 1)
+                {
+                    isRoundFinished = true;
+                    StartCoroutine(waiter());
+                }
+            }
+        }
     }
 
     private int deadTanks()
@@ -246,98 +244,71 @@ public class GameController : MonoBehaviour
         return counter;
     }
 
-    void nextRound()
-    {
-        System.Random r = new System.Random();
-
-        List<float> alreadyUsedX = new List<float>();
-        List<float> alreadyUsedZ = new List<float>();
-        int licz = 0;
-        foreach (TankController tank in tc)
-        {
-            bool correctSpawn = false;
-
-            int rot = r.Next(0, 360); // TODO
-            float x = 0;
-            float z = 0;
-
-            while (!correctSpawn)
-            {
-                if (licz++ > 10000)
-                {
-                    Debug.Log("enough");
-                    return; // debug only
-                }
-                int rInt = r.Next(0, spawnPositionsNo);
-                x = spawnPositionsX[rInt];
-                rInt = r.Next(0, spawnPositionsNo);
-                z = spawnPositionsZ[rInt];
-               
-                if (!alreadyUsedX.Any()) {
-                    alreadyUsedX.Add(x);
-                    alreadyUsedZ.Add(z);
-                    correctSpawn = true;
-                }
-                else
-                {
-                    if (alreadyUsedX.Contains(x) || alreadyUsedZ.Contains(z))
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        alreadyUsedX.Add(x);
-                        alreadyUsedZ.Add(z);
-                        correctSpawn = true;
-                    }
-                }                
-            }
-    
-            tank.spawnTank();
-            tank.setPosition(x, z, rot);
-        }
-        isRoundFinished = false;
-        // Destroy all bombs. Reset bombs limit.
-        // block moving at the end
-        // rotating doesnt work.
-    }
-
     IEnumerator waiter()
     {
-        // 3 second to assure that winner is still alive
+        // 3 seconds to check if winner is still alive
         yield return new WaitForSeconds(3);
-        //Debug.Log(deadTanks() + " oraz " + maxTanks);
-        //if (deadTanks() == maxTanks)
-        //{
-        //    StartCoroutine(finishRound());
-        //}
-        //else if (deadTanks() == maxTanks - 1)
-        //{
-        //    for (int i = 0; i < maxTanks; i++)
-        //    {
-        //        if (!tc[i].isDead)
-        //        {
-        //            tc[i].points++;
-        //        }
-        //    }
-        //    StartCoroutine(finishRound());
-        //}
-        //else
-        //{
-        //    Debug.Log("?????? Blad ??????");
-        //    StartCoroutine(finishRound());
-        //}
+        if (deadTanks() == currentPlayers)
+        {
+            finishRound();
+        }
+        else if (deadTanks() == currentPlayers - 1) // if one tank is still alive
+        {
+            Debug.Log("Jest git - jeden przezyl");
+            for (int i = 0; i < currentPlayers; i++)
+            {
+                if (!tc[i].isDead)
+                {
+                    tc[i].points++;
+                }
+            }
+            finishRound();
+        }
+        else
+        {
+            Debug.Log("Blad??? Niepoprawna liczba graczy pod koniec rundy.");
+        }
     }
 
-    IEnumerator finishRound()
+    private void finishRound()
     {
         Debug.Log("Round is finished.");
-        yield return new WaitForSeconds(2);
-        nextRound();
+
+        GameMessaging gm = communication.GameMsg;
+        gm.EchoFinishMessage();
+        for (int i = 0; i < currentPlayers; i++)
+        {
+            for (int j = 0; j < tc[i].barrelScript.maxBombsCurrent; j++)
+            {
+                if (tc[i].barrelScript.bombs[j] != null)
+                {
+                    tc[i].barrelScript.bombs[j].GetComponent<BombScript>().DestroyBomb(); // remove all bombs
+                }
+            }
+            tc[i].movingEnabled = false;
+
+            tc[i].turningLeft = false;
+            tc[i].turningRight = false;
+            tc[i].movingBackward = false;
+            tc[i].movingForward = false;
+
+            tc[i].isDead = false;
+            tc[i].died = false;
+            tc[i].currentHealth = tc[i].maxHealth;
+
+            Debug.Log("i: " + tc[i].transform.position);
+        }
+        isRoundFinished = false;
     }
 
     private void OnDestroy()
     {
         // TODO disconnect form server?
+    }
+
+    public void StartGame()
+    {
+        gameStarted = true;
+        healthStatusUI.StartGame(currentPlayers, tc);
     }
 }

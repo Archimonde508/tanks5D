@@ -18,6 +18,7 @@ public class BombScript : MonoBehaviour
     {
 
     }
+
     public IEnumerator BombCoroutine()
     {
         GetComponent<Rigidbody>().AddForce(transform.forward * force);
