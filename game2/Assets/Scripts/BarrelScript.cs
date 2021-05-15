@@ -8,7 +8,7 @@ public class BarrelScript : MonoBehaviour
     public int bombsFired = 0;
     public const int maxBombsTotal = 20;
     public GameObject projectilePrefab;
-    GameObject[] bombs = new GameObject[maxBombsTotal];
+    public GameObject[] bombs = new GameObject[maxBombsTotal];
     public int maxBombsCurrent = 6;
     float bombSpawnDistance = 1.2f;
 
@@ -19,13 +19,13 @@ public class BarrelScript : MonoBehaviour
 
     public void Fire()
     {
-        if(bombsFired < maxBombsCurrent)
-        {  
+        if (bombsFired < maxBombsCurrent)
+        {
             Vector3 vec = tank.transform.position + tank.transform.forward * bombSpawnDistance; // distance between a tank and a bomb
             vec.y = 0.8f; // height at which a bomb will be released
             for (int i = 0; i < maxBombsCurrent; i++)
-            { 
-                if(bombs[i] == null)
+            {
+                if (bombs[i] == null)
                 {
                     GameObject bomb = Instantiate(projectilePrefab, vec, transform.rotation);
                     BombScript bombScript = bomb.GetComponent<BombScript>();
@@ -38,7 +38,7 @@ public class BarrelScript : MonoBehaviour
                     break;
                 }
             }
-        }   
+        }
     }
     public void removeBomb(int id)
     {

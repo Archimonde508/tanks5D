@@ -1,0 +1,6 @@
+1. Lobby
+2. migniecie gdy zmienia sie runda
+2. Jak wybuchnie to reszta tez musi dostac info (zmniejszyc hp + usunac kulke, eeh)
+4. Muzyczka
+// 5. jak czolg wybucha doidac wszedzie false w poruszaniu sie aby po spawnie sam sie nie ruszal
+6. wiecej graczy

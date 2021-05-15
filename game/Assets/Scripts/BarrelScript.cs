@@ -8,7 +8,7 @@ public class BarrelScript : MonoBehaviour
     public int bombsFired = 0;
     public const int maxBombsTotal = 20;
     public GameObject projectilePrefab;
-    GameObject[] bombs = new GameObject[maxBombsTotal];
+    public GameObject[] bombs = new GameObject[maxBombsTotal];
     public int maxBombsCurrent = 6;
     float bombSpawnDistance = 1.2f;
 

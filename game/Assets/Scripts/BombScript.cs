@@ -18,6 +18,7 @@ public class BombScript : MonoBehaviour
     {
 
     }
+
     public IEnumerator BombCoroutine()
     {
         GetComponent<Rigidbody>().AddForce(transform.forward * force);
@@ -27,7 +28,7 @@ public class BombScript : MonoBehaviour
 
     public void DestroyBomb()
     {
-        if (!isDestroyed)
+        if (!isDestroyed) // can this trigger twice due to multi threading?
         {
             isDestroyed = true;
             barrelScript.removeBomb(id);

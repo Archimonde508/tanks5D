@@ -1,6 +1,6 @@
 let Server = require('./Classes/Server')
 
-var currentPlayers = 0;
+
 
 const WebSocket = require('ws')
 
@@ -11,9 +11,14 @@ const wss = new WebSocket.Server({ port: 3000 },()=>{
 let server = new Server(wss, process.env.PORT == undefined);
 
 wss.on('connection', (ws) => {
+
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
     let connection = server.onConnected(ws)
 
-    let client = server.connectNewClient(ws, currentPlayers)
+    let client = server.connectNewClient(ws)
 
     // tell other players that new user joined
     wss.broadcast(JSON.stringify({
@@ -25,9 +30,16 @@ wss.on('connection', (ws) => {
             tankId: client.id
         })
     }),ws)
-
-    currentPlayers++;
     
+    server.incrementCurrentplayersBecuaseJsIsShit();
+
+    console.log("Liczba graczy = " + server.getCurrentPlayers());
+
+    if(server.getCurrentPlayers() == 2){ // powinno reagowac na opa gry rozpoczynajacego
+        console.log("HALO ZARAZ ZACZNIEMY");
+        sleep(2000).then(() => { server.zacznijGre(ws) });
+    }
+
     ws.on('message', (data) => {
         server.handleMessage(ws, data);
     })
@@ -40,6 +52,7 @@ wss.on('connection', (ws) => {
         console.log('closed');
         server.disconnectClient(ws)
     }) 
+
     
 })
 
